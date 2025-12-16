@@ -9,6 +9,14 @@ export const postNewPost = t.Object({
   status: s.postStatusSchema,
 });
 
+export const patchPost = t.Object({
+  title: t.Optional(s.titleSchema),
+  excerpt: t.Optional(s.excerptSchema),
+  content: t.Optional(s.contentSchema),
+  tags: t.Optional(t.Array(s.idSchema)),
+  status: t.Optional(s.postStatusSchema)
+})
+
 export const fullPostSchema = t.Object({
   title: s.titleSchema,
   slug: s.slugSchema,
@@ -29,6 +37,7 @@ export const postPreviewSchema = t.Object({
   tags: s.tagsSchema,
   
   id: s.idSchema,
+  updatedAt: s.dateSchema,
   createdAt: s.dateSchema,
 });
 

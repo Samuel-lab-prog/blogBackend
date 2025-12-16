@@ -9,14 +9,21 @@ import { authPlugin } from '../../utils/authPlugin.ts';
 export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/',
-    async () => {
-      return await services.fetchAllPublishedPostsPreview();
+    async ({ query }) => {
+      return await services.fetchAllPublishedPostsPreview(query.cursor ?? undefined);
     },
     {
       response: {
-        200: t.Array(schemas.postPreviewSchema),
+        200: t.Object({
+          items: t.Array(schemas.postPreviewSchema),
+          nextCursor: t.Optional(idSchema),
+          hasMore: t.Boolean(),
+        }),
         500: appErrorSchema,
       },
+      query: t.Object({
+        cursor: t.Optional(idSchema)
+      }),
       detail: {
         summary: 'Get all previews',
         tags: ['Posts'],
@@ -24,13 +31,13 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     }
   )
   .get(
-    '/:slug',
+    '/:id',
     async ({ params }) => {
-      return await services.fetchPostBySlug(params.slug);
+      return await services.fetchPostById(params.id);
     },
     {
       params: t.Object({
-        slug: schemas.fullPostSchema.properties.slug,
+        id: schemas.fullPostSchema.properties.id,
       }),
       responses: {
         200: schemas.fullPostSchema,
@@ -105,6 +112,72 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       },
       detail: {
         summary: 'Soft delete a post by its ID',
+        tags: ['Posts'],
+      }
+    }
+  )
+  .patch(
+    '/:id',
+    async ({ params, body }) => {
+      return await services.modifyPostById(params.id, body);
+    },
+    {
+      params: t.Object({
+        id: idSchema,
+      }),
+      body: schemas.patchPost,
+      response: {
+        200: t.Object({
+          id: idSchema,
+        }),
+        400: appErrorSchema,
+        401: appErrorSchema,
+        404: appErrorSchema,
+        409: appErrorSchema,
+        422: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Update a post by its ID',
+        tags: ['Posts'],
+      }
+    }
+  )
+  .get('/deleted',
+    async () => {
+      return await services.fetchAllDeletedPosts();
+    },
+    {
+      response: {
+        200: t.Array(schemas.fullPostSchema),
+        401: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Get all deleted posts',
+        tags: ['Posts'],
+      }
+    }
+  )
+  .patch(
+    '/:id/restore',
+    async ({ params }) => {
+      return await services.restoreDeletedPostById(params.id);
+    },
+    {
+      params: t.Object({
+        id: idSchema,
+      }),
+      response: {
+        200: t.Object({
+          id: idSchema,
+        }),
+        401: appErrorSchema,
+        404: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Restore a deleted post by its ID',
         tags: ['Posts'],
       }
     }
