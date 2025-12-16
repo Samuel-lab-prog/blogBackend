@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { t } from 'elysia';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { log } from './logger.ts';
 
 export type AppErrorType = {
   statusCode?: number;
@@ -114,6 +115,7 @@ function extractUniqueFields(error: PrismaClientKnownRequestError): string[] {
 
 function handlePrismaError<T>(error: PrismaClientKnownRequestError, data?: T): never {
   const table = (error.meta as any)?.modelName || 'unknown';
+  log.debug(`Handling Prisma error code ${error.code} on table ${table}`);
   switch (error.code) {
     case 'P2002':
       {

@@ -31,7 +31,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     {
       params: t.Object({
         slug: schemas.fullPostSchema.properties.slug,
-      }), 
+      }),
       responses: {
         200: schemas.fullPostSchema,
         404: appErrorSchema,
@@ -80,6 +80,31 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       },
       detail: {
         summary: 'Get all drafts',
+        tags: ['Posts'],
+      }
+    }
+  )
+  .delete(
+    '/:id',
+    async ({ params, set }) => {
+      const result = await services.softRemovePostById(params.id);
+      set.status = 200;
+      return result;
+    },
+    {
+      params: t.Object({
+        id: idSchema,
+      }),
+      response: {
+        200: t.Object({
+          id: idSchema,
+        }),
+        401: appErrorSchema,
+        404: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Soft delete a post by its ID',
         tags: ['Posts'],
       }
     }

@@ -40,3 +40,7 @@ export async function fetchAllPublishedPostsPreview(): Promise<t.PostPreview[]> 
 export async function fetchAllDrafts(): Promise<t.FullPost[]> {
   return await r.selectAllDrafts();
 }
+
+export async function softRemovePostById(id: number): Promise<{ id: number }> {
+  return await r.softDeletePostById(id);
+}

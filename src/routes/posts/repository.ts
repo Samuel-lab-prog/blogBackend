@@ -42,4 +42,12 @@ export function selectAllDrafts(): Promise<t.FullPost[]> {
   );
 }
 
-
+export function softDeletePostById(id: number): Promise<{ id: number }> {
+  return withPrismaErrorHandling(() => 
+    prisma.post.update({
+      where: { id, deletedAt: null },
+      data: { deletedAt: new Date() },
+      select: {id: true},
+    })
+  );
+}
