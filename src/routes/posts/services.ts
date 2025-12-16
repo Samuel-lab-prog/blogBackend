@@ -9,31 +9,36 @@ export async function registerPost(
 
   const slug = slugify(body.title, { lower: true, strict: true });
   const { tags, ...postData } = body;
+
   const normalizedTags = tags
-    .map(
+    ?.map(
       tag => tag
         .charAt(0)
         .toUpperCase()
         + tag.slice(1)
-          .toLowerCase());
+          .toLowerCase())
 
   return await r.insertPost({
     ...postData,
     slug,
-    tags: {
-      connectOrCreate: normalizedTags.map((tag) => ({
+    tags: tags ? {
+      connectOrCreate: normalizedTags?.map((tag) => ({
         where: { name: tag },
         create: { name: tag },
       })),
-    }
+    } : undefined,
   });
 }
 
 export async function fetchPostById(id: number): Promise<t.FullPost> {
-  return await r.selectPostById(id) ?? throwNotFoundError('Post not found');
+  const post = await r.selectPostById(id);
+  if (!post) {
+    throwNotFoundError('Post not found');
+  }
+  return post;
 }
 
-export async function fetchAllPostsPreviews(cursor?: number, tag?: string): Promise<{items: t.PostPreview[]; nextCursor?: number; hasMore: boolean;}> {
+export async function fetchAllPostsPreviews(cursor?: number, tag?: string): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean; }> {
   return await r.selectAllPublishedPostsPreviews(cursor, tag);
 }
 
@@ -49,11 +54,11 @@ export async function modifyPostById(
   id: number,
   data: t.PatchPost
 ): Promise<{ id: number }> {
-  const prismaData: t.UpdatePost = {
+
+  const prismaData: Partial<t.UpdatePost> = {
     title: data.title,
     excerpt: data.excerpt,
     content: data.content,
-    status: data.status,
   };
 
   if (data.title) {

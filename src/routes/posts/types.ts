@@ -5,6 +5,7 @@ import type { PostCreateInput, PostUpdateInput } from '../../prisma/generated/mo
 export type PostNewPost = (typeof s.postNewPost)['static'];
 export type PatchPost = (typeof s.patchPost)['static'];
 export type FullPost = (typeof s.fullPostSchema)['static'];
+export type PaginatedPosts = (typeof s.paginatedPostsSchema)['static'];
 export type PostPreview = (typeof s.postPreviewSchema)['static'];
 export type InsertPost = PostCreateInput;
 export type UpdatePost = PostUpdateInput;

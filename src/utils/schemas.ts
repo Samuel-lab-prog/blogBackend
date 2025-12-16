@@ -36,8 +36,8 @@ export const loginSchema = t.Object({
 
 //--------------------POSTS SCHEMAS---------------------//
 
-export const postStatusSchema = t.UnionEnum(['draft', 'published'], {
-  example: 'draft',
+export const postStatusSchema = t.UnionEnum(['published', 'draft'], {
+  example: 'published',
   ...makeValidationError('Status must be either draft or published'),
 });
 

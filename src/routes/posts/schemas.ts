@@ -1,12 +1,13 @@
 import { t } from 'elysia';
 import * as s from '../../utils/schemas.ts';
+import { makeValidationError } from '../../utils/AppError.ts';
 
 export const postNewPost = t.Object({
   title: s.titleSchema,
   excerpt: s.excerptSchema,
   content: s.contentSchema,
-  tags: t.Array(s.tagSchema),
-  status: s.postStatusSchema,
+  tags: t.Optional(t.Array(s.tagSchema)),
+  status: t.Optional(s.postStatusSchema)
 });
 
 export const patchPost = t.Object({
@@ -14,8 +15,8 @@ export const patchPost = t.Object({
   excerpt: t.Optional(s.excerptSchema),
   content: t.Optional(s.contentSchema),
   tags: t.Optional(t.Array(s.idSchema)),
-  status: t.Optional(s.postStatusSchema)
-})
+}, {  minProperties: 1,
+     ...makeValidationError('At least one field must be provided to update the post'),})
 
 export const fullPostSchema = t.Object({
   title: s.titleSchema,
@@ -28,6 +29,12 @@ export const fullPostSchema = t.Object({
   id: s.idSchema,
   createdAt: s.dateSchema,
   updatedAt: s.dateSchema,
+});
+
+export const paginatedPostsSchema = t.Object({
+  items: t.Array(fullPostSchema),
+  nextCursor: t.Optional(s.idSchema),
+  hasMore: t.Boolean(),
 });
 
 export const postPreviewSchema = t.Object({

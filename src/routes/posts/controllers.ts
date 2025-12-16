@@ -7,6 +7,7 @@ import * as schemas from './schemas.ts';
 import { authPlugin } from '../../utils/authPlugin.ts';
 
 export const postsRouter = new Elysia({ prefix: '/posts' })
+  .as('scoped')
   .get(
     '/',
     async ({ query }) => {
@@ -38,15 +39,15 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     },
     {
       params: t.Object({
-        id: schemas.fullPostSchema.properties.id,
+        id: idSchema,
       }),
-      responses: {
+      response: {
         200: schemas.fullPostSchema,
         404: appErrorSchema,
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Get a post by its slug',
+        summary: 'Get a post by its ID',
         tags: ['Posts'],
       }
     }
