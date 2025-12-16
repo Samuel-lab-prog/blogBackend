@@ -10,7 +10,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/',
     async ({ query }) => {
-      return await services.fetchAllPublishedPostsPreview(query.cursor ?? undefined);
+      return await services.fetchAllPostsPreviews(query.cursor ?? undefined, query.tag ?? undefined);
     },
     {
       response: {
@@ -22,7 +22,8 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         500: appErrorSchema,
       },
       query: t.Object({
-        cursor: t.Optional(idSchema)
+        cursor: t.Optional(idSchema),
+        tag: t.Optional(t.String()),
       }),
       detail: {
         summary: 'Get all previews',

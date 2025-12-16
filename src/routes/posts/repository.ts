@@ -25,7 +25,8 @@ export function selectPostById(id: number): Promise<t.PostFullRow | null> {
 const takeCount = 10;
 
 export async function selectAllPublishedPostsPreviews(
-  cursor: number | null = null
+  cursor: number | null = null,
+  filterTag?: string
 ): Promise<{
   items: t.PostPreview[];
   nextCursor?: number;
@@ -33,7 +34,7 @@ export async function selectAllPublishedPostsPreviews(
 }> {
   const posts = await withPrismaErrorHandling(() =>
     prisma.post.findMany({
-      where: { status: 'published', deletedAt: null },
+      where: { status: 'published', deletedAt: null, tags: { some: { name: filterTag } } },
       select: t.postPreviewSelect,
       orderBy: { createdAt: 'desc' },
       take: takeCount + 1,
@@ -104,6 +105,14 @@ export function restorePostById(id: number): Promise<{ id: number }> {
       where: { id, deletedAt: { not: null } },
       data: { deletedAt: null },
       select: { id: true },
+    })
+  );
+}
+
+export function selectAllTags() {
+  return withPrismaErrorHandling(() =>
+    prisma.tag.findMany({
+      orderBy: { name: 'asc' },
     })
   );
 }

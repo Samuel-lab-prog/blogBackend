@@ -33,8 +33,8 @@ export async function fetchPostById(id: number): Promise<t.FullPost> {
   return await r.selectPostById(id) ?? throwNotFoundError('Post not found');
 }
 
-export async function fetchAllPublishedPostsPreview(cursor?: number): Promise<{items: t.PostPreview[]; nextCursor?: number; hasMore: boolean;}> {
-  return await r.selectAllPublishedPostsPreviews(cursor);
+export async function fetchAllPostsPreviews(cursor?: number, tag?: string): Promise<{items: t.PostPreview[]; nextCursor?: number; hasMore: boolean;}> {
+  return await r.selectAllPublishedPostsPreviews(cursor, tag);
 }
 
 export async function fetchAllDrafts(): Promise<t.FullPost[]> {
