@@ -22,7 +22,6 @@ export function selectPostById(id: number): Promise<t.PostFullRow | null> {
   );
 }
 
-const takeCount = 10;
 
 export async function selectAllPublishedPostsPreviews(
   cursor: number | null = null,
@@ -32,11 +31,23 @@ export async function selectAllPublishedPostsPreviews(
   nextCursor?: number;
   hasMore: boolean;
 }> {
+  const takeCount = 10;
+
   const posts = await withPrismaErrorHandling(() =>
     prisma.post.findMany({
-      where: { status: 'published', deletedAt: null, tags: { some: { name: filterTag } } },
+      where: {
+        status: 'published',
+        deletedAt: null,
+        ...(filterTag && {
+          tags: {
+            some: {
+              name: filterTag,
+            },
+          },
+        }),
+      },
       select: t.postPreviewSelect,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
       take: takeCount + 1,
       ...(cursor && {
         cursor: { id: cursor },
@@ -45,12 +56,13 @@ export async function selectAllPublishedPostsPreviews(
     })
   );
 
+
   const hasMore = posts.length > takeCount;
   if (hasMore) posts.pop();
 
   return {
     items: posts,
-    nextCursor: hasMore ? posts.at(-1)!.id : undefined,
+    nextCursor: hasMore ? posts.at(-1)?.id : undefined,
     hasMore,
   };
 }
@@ -67,11 +79,11 @@ export function selectAllDrafts(): Promise<t.FullPost[]> {
 }
 
 export function softDeletePostById(id: number): Promise<{ id: number }> {
-  return withPrismaErrorHandling(() => 
+  return withPrismaErrorHandling(() =>
     prisma.post.update({
       where: { id, deletedAt: null },
       data: { deletedAt: new Date() },
-      select: {id: true},
+      select: { id: true },
     })
   );
 }
