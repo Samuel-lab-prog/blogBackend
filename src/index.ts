@@ -4,12 +4,13 @@ import { openapi, fromTypes } from '@elysiajs/openapi';
 import { rateLimit } from 'elysia-rate-limit';
 import { BunAdapter } from 'elysia/adapter/bun';
 
-import { handleError } from './utils/handleError';
+import { ErrorPlugin } from './utils/errorPlugin';
+import { LoggerPlugin } from './utils/loggerPlugin';
 import { sanitize } from './utils/xssClean';
-import * as l from './utils/logger';
 
 import { postsRouter } from './routes/posts/controllers';
 import { authRouter } from './routes/auth/controllers';
+
 
 const PREFIX = '/api/v1';
 const INSTANCE_NAME = 'mainServerInstance';
@@ -40,24 +41,8 @@ const ELYSIA_SETTINGS = {
 };
 
 export default new Elysia(ELYSIA_SETTINGS)
-  .state('reqInitiatedAt', 0)
-  .state('reqId', '')
-  .onError(({ error, set, code, store }) => handleError(set, error, code, store.reqId))
-
-
-  .onStart(() => {
-    l.log.info(`🚀 Server started at http://${HOST_NAME}:${PORT}${PREFIX}/docs`);
-  })
-  .onRequest((ctx) => {
-    ctx.store.reqId = crypto.randomUUID();
-    if (ctx.request.url.includes('/docs')) return;
-    ctx.store.reqInitiatedAt = performance.now();
-    l.logOnRequest(ctx.request, ctx.store.reqId);
-  })
-  .onAfterResponse((ctx) => {
-    if (ctx.request.url.includes('/docs')) return;
-    l.logOnAfterResponse(ctx, ctx.store.reqId, ctx.store.reqInitiatedAt, ctx.response);
-  })
+  .use(LoggerPlugin)
+  .use(ErrorPlugin)
   .use(rateLimit({
     max: 1000,
     duration: 15 * 60 * 1000, // 15 minutes

@@ -114,7 +114,6 @@ function extractUniqueFields(error: PrismaClientKnownRequestError): string[] {
 
 function handlePrismaError<T>(error: PrismaClientKnownRequestError, data?: T): never {
   const table = (error.meta as any)?.modelName || 'unknown';
-  console.log('Prisma Error Code:', error.code);
   switch (error.code) {
     case 'P2002':
       {

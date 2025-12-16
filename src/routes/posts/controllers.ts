@@ -4,10 +4,9 @@ import { idSchema } from '../../utils/schemas.ts';
 
 import * as services from './services.ts';
 import * as schemas from './schemas.ts';
-import { authPlugin } from '../auth/controllers.ts';
+import { authPlugin } from '../../utils/authPlugin.ts';
 
 export const postsRouter = new Elysia({ prefix: '/posts' })
-
   .get(
     '/',
     async () => {
@@ -25,14 +24,14 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     }
   )
   .get(
-    '/:id',
+    '/:slug',
     async ({ params }) => {
-      return await services.fetchPostById(params.id);
+      return await services.fetchPostBySlug(params.slug);
     },
     {
       params: t.Object({
-        id: idSchema,
-      }),
+        slug: schemas.fullPostSchema.properties.slug,
+      }), 
       responses: {
         200: schemas.fullPostSchema,
         404: appErrorSchema,
@@ -45,7 +44,6 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     }
   )
   .use(authPlugin)
-  
   .post(
     '/',
     async ({ body, set }) => {

@@ -13,10 +13,10 @@ export function insertPost(
   );
 }
 
-export function selectPostById(id: number): Promise<t.PostFullRow | null> {
+export function selectPostBySlug(slug: string): Promise<t.PostFullRow | null> {
   return withPrismaErrorHandling<t.PostFullRow | null>(() =>
     prisma.post.findFirst({
-      where: { id },
+      where: { slug },
       include: t.fullPostRowInclude,
     })
   );

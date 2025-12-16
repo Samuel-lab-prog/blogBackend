@@ -5,7 +5,7 @@ export const postNewPost = t.Object({
   title: s.titleSchema,
   excerpt: s.excerptSchema,
   content: s.contentSchema,
-  tags: s.tagsSchema,
+  tags: t.Array(s.tagSchema),
   status: s.postStatusSchema,
 });
 

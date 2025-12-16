@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AppError } from '../utils/AppError.ts';
-import { logOnError } from './logger.ts';
+import Elysia from 'elysia';
+import { AppError } from './AppError.ts';
+import { log } from './logger.ts';
+import { SetupPlugin } from './setupPlugin.ts';
 
 export function handleError(set: any, error: unknown, code: any, reqId: string) {
   if (error instanceof AppError) {
-    return respondWithAppError(set, error, reqId, error instanceof Error ? error.stack : undefined);
+    return respondWithAppError(set, error, reqId, error instanceof Error ? error.stack : 'Not available');
   }
 
   const normalizedCode =
@@ -25,12 +27,7 @@ export function handleError(set: any, error: unknown, code: any, reqId: string) 
 
   set.status = statusCode;
 
-  logOnError(
-    error instanceof Error ? error.message : String(error),
-    statusCode,
-    error instanceof Error ? error.stack : undefined,
-    reqId
-  );
+  
 
   return {
     errorMessages: ['An unexpected error occurred'],
@@ -41,8 +38,15 @@ export function handleError(set: any, error: unknown, code: any, reqId: string) 
 function respondWithAppError(set: any, err: AppError, reqId: string, stack?: string) {
   set.status = err.statusCode;
 
-  logOnError(err.errorMessages.join(', '), err.statusCode, stack ?? err.stack, reqId);
-
+  log.error(
+    {
+      reqId,
+      statusCode: err.statusCode,
+      message: err.errorMessages.join(', '),
+      stack: stack ?? err.stack,
+    },
+    'Error occurred:'
+  );
   return {
     errorMessages: err.errorMessages,
     statusCode: err.statusCode,
@@ -76,3 +80,9 @@ function convertElysiaError(code: string): AppError {
       return new AppError({ statusCode: 500, errorMessages: ['Internal server error'] });
   }
 }
+
+export const ErrorPlugin = new Elysia()
+  .use(SetupPlugin)
+  .onError({ as: 'scoped' }, ({ error, set, code, store }) =>
+    handleError(set, error, code, store.reqId)
+  );

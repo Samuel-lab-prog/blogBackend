@@ -9,7 +9,6 @@ export async function login(
   email: string,
   password: string
 ): Promise<{ data: { id: number }; token: string }> {
-  console.log(bcrypt.hashSync('ABAKAXIparede12!', 10));
   const user = await selectUserByEmail(email);
 
   if (user && (await bcrypt.compare(password, user.password))) {

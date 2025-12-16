@@ -11,10 +11,10 @@ export async function registerPost(
   const { tags, ...postData } = body;
   const normalizedTags = tags
     .map(
-      tag => tag.name
+      tag => tag
         .charAt(0)
         .toUpperCase()
-        + tag.name.slice(1)
+        + tag.slice(1)
           .toLowerCase());
 
   return await r.insertPost({
@@ -29,8 +29,8 @@ export async function registerPost(
   });
 }
 
-export async function fetchPostById(id: number): Promise<t.FullPost> {
-  return await r.selectPostById(id) ?? throwNotFoundError('Post not found');
+export async function fetchPostBySlug(slug: string): Promise<t.FullPost> {
+  return await r.selectPostBySlug(slug) ?? throwNotFoundError('Post not found');
 }
 
 export async function fetchAllPostsPreview(): Promise<t.PostPreview[]> {
