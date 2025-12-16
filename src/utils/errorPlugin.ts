@@ -6,7 +6,12 @@ import { SetupPlugin } from './setupPlugin.ts';
 
 export function handleError(set: any, error: unknown, code: any, reqId: string) {
   if (error instanceof AppError) {
-    return respondWithAppError(set, error, reqId, error instanceof Error ? error.stack : 'Not available');
+    return respondWithAppError(
+      set,
+      error,
+      reqId,
+      error instanceof Error ? error.stack : 'Not available'
+    );
   }
 
   const normalizedCode =
@@ -26,8 +31,6 @@ export function handleError(set: any, error: unknown, code: any, reqId: string) 
   const statusCode = typeof set.status === 'number' && set.status >= 400 ? set.status : 500;
 
   set.status = statusCode;
-
-  
 
   return {
     errorMessages: ['An unexpected error occurred'],

@@ -1,11 +1,10 @@
 import { prisma } from '../client.ts';
 
-
-const adminEmail = process.env.ADMIN_EMAIL
-const adminPassword = process.env.ADMIN_PASSWORD_HASH
+const adminEmail = process.env.ADMIN_EMAIL;
+const adminPassword = process.env.ADMIN_PASSWORD_HASH;
 
 if (!adminEmail || !adminPassword) {
-  throw new Error("ADMIN_EMAIL or ADMIN_PASSWORD_HASH environment variables are not set")
+  throw new Error('ADMIN_EMAIL or ADMIN_PASSWORD_HASH environment variables are not set');
 }
 const data = [
   {

@@ -3,7 +3,6 @@ import { prisma } from '../../prisma/client';
 import * as r from './repository';
 
 describe('Post repository', () => {
-
   beforeEach(async () => {
     await prisma.post.deleteMany();
     await prisma.tag.deleteMany();
@@ -19,7 +18,6 @@ describe('Post repository', () => {
       tags: {
         create: [{ name: 'Tag1' }, { name: 'Tag2' }],
       },
-
     });
 
     expect(result.id).toBeTypeOf('number');
@@ -185,7 +183,6 @@ describe('Post repository', () => {
     expect(secondPage.hasMore).toBe(false);
   });
 
-
   it('selectAllDrafts -> Should return only drafts', async () => {
     await prisma.post.createMany({
       data: [
@@ -246,7 +243,6 @@ describe('Post repository', () => {
     expect(updated?.title).toBe('New');
   });
 
-
   it('selectAllDeletedPosts -> Should return only deleted posts', async () => {
     await prisma.post.create({
       data: {
@@ -283,10 +279,7 @@ describe('Post repository', () => {
 
   it('selectAllTags -> Should return tags ordered by name', async () => {
     await prisma.tag.createMany({
-      data: [
-        { name: 'zeta' },
-        { name: 'alpha' },
-      ],
+      data: [{ name: 'zeta' }, { name: 'alpha' }],
     });
 
     const tags = await r.selectAllTags();

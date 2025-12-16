@@ -10,10 +10,7 @@ function createApp() {
   return new Elysia().use(server);
 }
 
-function jsonRequest(
-  url: string,
-  options: Omit<RequestInit, 'body'> & { body?: unknown } = {}
-) {
+function jsonRequest(url: string, options: Omit<RequestInit, 'body'> & { body?: unknown } = {}) {
   return new Request(url, {
     ...options,
     headers: {
@@ -26,9 +23,7 @@ function jsonRequest(
 
 let postCounter = 0;
 
-function postFactory(
-  overrides?: Partial<Parameters<typeof prisma.post.create>[0]['data']>
-) {
+function postFactory(overrides?: Partial<Parameters<typeof prisma.post.create>[0]['data']>) {
   postCounter++;
 
   return {
@@ -41,9 +36,7 @@ function postFactory(
   };
 }
 
-async function createPost(
-  overrides?: Partial<Parameters<typeof prisma.post.create>[0]['data']>
-) {
+async function createPost(overrides?: Partial<Parameters<typeof prisma.post.create>[0]['data']>) {
   return prisma.post.create({
     data: postFactory(overrides),
   });
@@ -63,7 +56,7 @@ describe('Post controllers tests', () => {
 
   it('GET /posts -> should return empty list when no posts exist', async () => {
     const resp = await createApp().handle(new Request(PREFIX));
-    const body = await resp.json() as t.PaginatedPosts;
+    const body = (await resp.json()) as t.PaginatedPosts;
 
     expect(resp.status).toBe(200);
     expect(body).toMatchObject({
@@ -77,7 +70,7 @@ describe('Post controllers tests', () => {
     await createPublishedPosts(10);
 
     const resp = await createApp().handle(new Request(PREFIX));
-    const body = await resp.json() as t.PaginatedPosts;
+    const body = (await resp.json()) as t.PaginatedPosts;
 
     expect(resp.status).toBe(200);
     expect(body.items).toHaveLength(10);
@@ -88,47 +81,40 @@ describe('Post controllers tests', () => {
     await createPublishedPosts(12);
 
     const resp = await createApp().handle(new Request(PREFIX));
-    const body = await resp.json() as t.PaginatedPosts;
+    const body = (await resp.json()) as t.PaginatedPosts;
 
     expect(resp.status).toBe(200);
     expect(body.items).toHaveLength(10);
     expect(body.hasMore).toBe(true);
     expect(body.nextCursor).toBeDefined();
 
-    expect(body.items[0]!.id).toBeGreaterThan(
-      body.items.at(-1)!.id
-    );
+    expect(body.items[0]!.id).toBeGreaterThan(body.items.at(-1)!.id);
   });
 
   it('GET /posts -> should return 422 when cursor is invalid', async () => {
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}?cursor=abc`)
-    );
+    const resp = await createApp().handle(new Request(`${PREFIX}?cursor=abc`));
 
     expect(resp.status).toBe(422);
   });
-
 
   it('GET /posts -> should return next page using cursor', async () => {
     await createPublishedPosts(12);
     const app = createApp();
 
     const firstResp = await app.handle(new Request(PREFIX));
-    const firstBody = await firstResp.json() as t.PaginatedPosts;
+    const firstBody = (await firstResp.json()) as t.PaginatedPosts;
 
     expect(firstBody.hasMore).toBe(true);
     expect(firstBody.nextCursor).toBeDefined();
 
-    const secondResp = await app.handle(
-      new Request(`${PREFIX}?cursor=${firstBody.nextCursor}`)
-    );
-    const secondBody = await secondResp.json() as t.PaginatedPosts;
+    const secondResp = await app.handle(new Request(`${PREFIX}?cursor=${firstBody.nextCursor}`));
+    const secondBody = (await secondResp.json()) as t.PaginatedPosts;
 
     expect(secondResp.status).toBe(200);
     expect(secondBody.items).toHaveLength(2);
 
-    const firstIds = firstBody.items.map(p => p.id);
-    const secondIds = secondBody.items.map(p => p.id);
+    const firstIds = firstBody.items.map((p) => p.id);
+    const secondIds = secondBody.items.map((p) => p.id);
 
     for (const id of secondIds) {
       expect(firstIds).not.toContain(id);
@@ -147,10 +133,8 @@ describe('Post controllers tests', () => {
       title: 'Untagged post',
     });
 
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}?tag=elysia`)
-    );
-    const body = await resp.json() as t.PaginatedPosts;
+    const resp = await createApp().handle(new Request(`${PREFIX}?tag=elysia`));
+    const body = (await resp.json()) as t.PaginatedPosts;
 
     expect(resp.status).toBe(200);
     expect(body.items).toHaveLength(1);
@@ -160,24 +144,19 @@ describe('Post controllers tests', () => {
   it('GET /posts -> should return empty list when tag does not exist', async () => {
     await createPublishedPosts(5);
 
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}?tag=nonexistent`)
-    );
-    const body = await resp.json() as t.PaginatedPosts;
+    const resp = await createApp().handle(new Request(`${PREFIX}?tag=nonexistent`));
+    const body = (await resp.json()) as t.PaginatedPosts;
 
     expect(resp.status).toBe(200);
     expect(body.items).toHaveLength(0);
     expect(body.hasMore).toBe(false);
   });
 
-
   it('GET /posts/:id -> should return a published post', async () => {
     const post = await createPost();
 
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}/${post.id}`)
-    );
-    const body = await resp.json() as t.FullPost;
+    const resp = await createApp().handle(new Request(`${PREFIX}/${post.id}`));
+    const body = (await resp.json()) as t.FullPost;
 
     expect(resp.status).toBe(200);
     expect(body.id).toBe(post.id);
@@ -192,17 +171,13 @@ describe('Post controllers tests', () => {
       data: { deletedAt: new Date() },
     });
 
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}/${post.id}`)
-    );
+    const resp = await createApp().handle(new Request(`${PREFIX}/${post.id}`));
 
     expect(resp.status).toBe(404);
   });
 
   it('GET /posts/:id -> should return 404 when post does not exist', async () => {
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}/999999`)
-    );
+    const resp = await createApp().handle(new Request(`${PREFIX}/999999`));
 
     expect(resp.status).toBe(404);
   });
@@ -222,7 +197,7 @@ describe('Post controllers tests', () => {
 
     expect(resp.status).toBe(201);
 
-    const body = await resp.json() as { id: number };
+    const body = (await resp.json()) as { id: number };
     const postInDb = await prisma.post.findUnique({
       where: { id: body.id },
     });
@@ -268,10 +243,8 @@ describe('Post controllers tests', () => {
     await createPost({ status: 'draft' });
     await createPost({ status: 'published' });
 
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}/drafts`)
-    );
-    const body = await resp.json() as t.FullPost[];
+    const resp = await createApp().handle(new Request(`${PREFIX}/drafts`));
+    const body = (await resp.json()) as t.FullPost[];
 
     expect(resp.status).toBe(200);
     expect(body).toHaveLength(1);
@@ -284,7 +257,7 @@ describe('Post controllers tests', () => {
     const resp = await createApp().handle(
       new Request(`${PREFIX}/${post.id}`, { method: 'DELETE' })
     );
-    const body = await resp.json() as { id: number };
+    const body = (await resp.json()) as { id: number };
 
     expect(resp.status).toBe(200);
     expect(body.id).toBe(post.id);
@@ -310,7 +283,6 @@ describe('Post controllers tests', () => {
 
     expect(resp.status).toBe(404);
   });
-
 
   it('PATCH /posts/:id -> should return 400 when body is empty', async () => {
     const post = await createPost();
@@ -363,10 +335,8 @@ describe('Post controllers tests', () => {
       data: { deletedAt: new Date() },
     });
 
-    const resp = await createApp().handle(
-      new Request(`${PREFIX}/deleted`)
-    );
-    const body = await resp.json() as t.FullPost[];
+    const resp = await createApp().handle(new Request(`${PREFIX}/deleted`));
+    const body = (await resp.json()) as t.FullPost[];
 
     expect(resp.status).toBe(200);
     expect(body).toHaveLength(1);
@@ -382,7 +352,6 @@ describe('Post controllers tests', () => {
 
     expect(resp.status).toBe(404);
   });
-
 
   it('PATCH /posts/:id/restore -> should restore a deleted post', async () => {
     const post = await createPost();

@@ -7,8 +7,6 @@ export const dateSchema = t.Date({
   example: '2024-01-01T12:00:00Z',
   ...makeValidationError('CreatedAt must be a valid date string'),
 });
-;
-
 export const idSchema = t.Number({
   minimum: 1,
   example: 1,
@@ -76,13 +74,18 @@ export const tagSchema = t.String({
   ...makeValidationError('Each tag must be between 3 and 50 characters'),
 });
 
-export const tagsSchema = t.Array(t.Object({
-  name: tagSchema,
-  id: idSchema,
-}), {
-  minItems: 0,
-  maxItems: 5,
-  example: [{ name: 'Technology', id: 1 }, { name: 'Programming', id: 2 }],
-  ...makeValidationError('Tags must be an array with 0 to 5 items'),
-});
-
+export const tagsSchema = t.Array(
+  t.Object({
+    name: tagSchema,
+    id: idSchema,
+  }),
+  {
+    minItems: 0,
+    maxItems: 5,
+    example: [
+      { name: 'Technology', id: 1 },
+      { name: 'Programming', id: 2 },
+    ],
+    ...makeValidationError('Tags must be an array with 0 to 5 items'),
+  }
+);

@@ -12,6 +12,6 @@ export function selectUserByEmail(email: string): Promise<UserRow | null> {
 prisma.user.create({
   data: {
     email: 'martinsmiranha@gmail.com',
-    password: '$2b$10$8sDqN.ba5SQB4xNh4wXP.eFkC3gCfd2JhyOj1bue/Fd7lQxpJDCjW'
-  }
-})
+    password: '$2b$10$8sDqN.ba5SQB4xNh4wXP.eFkC3gCfd2JhyOj1bue/Fd7lQxpJDCjW',
+  },
+});

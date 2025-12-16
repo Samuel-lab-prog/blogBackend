@@ -11,7 +11,6 @@ import { sanitize } from './utils/xssClean';
 import { postsRouter } from './routes/posts/controllers';
 import { authRouter } from './routes/auth/controllers';
 
-
 const PREFIX = '/api/v1';
 const INSTANCE_NAME = 'mainServerInstance';
 const HOST_NAME = 'localhost';
@@ -43,10 +42,12 @@ const ELYSIA_SETTINGS = {
 export default new Elysia(ELYSIA_SETTINGS)
   .use(LoggerPlugin)
   .use(ErrorPlugin)
-  .use(rateLimit({
-    max: 1000,
-    duration: 15 * 60 * 1000, // 15 minutes
-  }))
+  .use(
+    rateLimit({
+      max: 1000,
+      duration: 15 * 60 * 1000, // 15 minutes
+    })
+  )
   .use(cors())
   .use(postsRouter)
   .use(authRouter)

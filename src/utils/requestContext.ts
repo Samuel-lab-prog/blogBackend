@@ -5,5 +5,4 @@ export type RequestTimingContext = {
   dbTimings: number[];
 };
 
-export const requestContext =
-  new AsyncLocalStorage<RequestTimingContext>();
+export const requestContext = new AsyncLocalStorage<RequestTimingContext>();

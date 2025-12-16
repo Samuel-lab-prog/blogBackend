@@ -2,9 +2,7 @@ import { prisma } from '../../prisma/client.ts';
 import { withPrismaErrorHandling } from '../../utils/AppError.ts';
 import * as t from './types.ts';
 
-export function insertPost(
-  data: t.InsertPost
-): Promise<{ id: number }> {
+export function insertPost(data: t.InsertPost): Promise<{ id: number }> {
   return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.create({
       data,
@@ -21,7 +19,6 @@ export function selectPostById(id: number): Promise<t.PostFullRow | null> {
     })
   );
 }
-
 
 export async function selectAllPublishedPostsPreviews(
   cursor: number | null = null,
@@ -56,7 +53,6 @@ export async function selectAllPublishedPostsPreviews(
     })
   );
 
-
   const hasMore = posts.length > takeCount;
   if (hasMore) posts.pop();
 
@@ -66,7 +62,6 @@ export async function selectAllPublishedPostsPreviews(
     hasMore,
   };
 }
-
 
 export function selectAllDrafts(): Promise<t.FullPost[]> {
   return withPrismaErrorHandling(() =>
@@ -88,10 +83,7 @@ export function softDeletePostById(id: number): Promise<{ id: number }> {
   );
 }
 
-export function updatePostById(
-  id: number,
-  data: t.UpdatePost
-): Promise<{ id: number }> {
+export function updatePostById(id: number, data: t.UpdatePost): Promise<{ id: number }> {
   return withPrismaErrorHandling(() =>
     prisma.post.update({
       where: { id, deletedAt: null },

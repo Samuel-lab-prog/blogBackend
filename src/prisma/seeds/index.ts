@@ -1,4 +1,4 @@
-import seedUsers from "./users";
+import seedUsers from './users';
 
 async function main() {
   await seedUsers();

@@ -6,4 +6,3 @@ const connectionString = `${process.env.TEST_DATABASE_URL}`;
 
 const adapter = new PrismaPg({ connectionString });
 export const prisma = new PrismaClient({ adapter, errorFormat: 'pretty' });
-

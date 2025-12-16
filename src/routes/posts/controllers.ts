@@ -11,7 +11,10 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/',
     async ({ query }) => {
-      return await services.fetchAllPostsPreviews(query.cursor ?? undefined, query.tag ?? undefined);
+      return await services.fetchAllPostsPreviews(
+        query.cursor ?? undefined,
+        query.tag ?? undefined
+      );
     },
     {
       response: {
@@ -29,7 +32,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Get all previews',
         tags: ['Posts'],
-      }
+      },
     }
   )
   .get(
@@ -49,7 +52,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Get a post by its ID',
         tags: ['Posts'],
-      }
+      },
     }
   )
   .use(authPlugin)
@@ -73,7 +76,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Create',
         tags: ['Posts'],
-      }
+      },
     }
   )
   .get(
@@ -90,7 +93,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Get all drafts',
         tags: ['Posts'],
-      }
+      },
     }
   )
   .delete(
@@ -115,7 +118,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Soft delete a post by its ID',
         tags: ['Posts'],
-      }
+      },
     }
   )
   .patch(
@@ -142,10 +145,11 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Update a post by its ID',
         tags: ['Posts'],
-      }
+      },
     }
   )
-  .get('/deleted',
+  .get(
+    '/deleted',
     async () => {
       return await services.fetchAllDeletedPosts();
     },
@@ -158,7 +162,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Get all deleted posts',
         tags: ['Posts'],
-      }
+      },
     }
   )
   .patch(
@@ -181,6 +185,6 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       detail: {
         summary: 'Restore a deleted post by its ID',
         tags: ['Posts'],
-      }
+      },
     }
   );

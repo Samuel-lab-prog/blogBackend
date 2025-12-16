@@ -4,7 +4,6 @@ import { selectUserByEmail } from '../users/models.ts';
 import { throwUnauthorizedError } from '../../utils/AppError.ts';
 import type { UserRow } from '../users/types.ts';
 
-
 export async function login(
   email: string,
   password: string

@@ -11,14 +11,14 @@ export type InsertPost = PostCreateInput;
 export type UpdatePost = PostUpdateInput;
 
 export const fullPostRowInclude = {
-    tags: {
-      select: {
-        name: true, id: true
-      }
-    }
-}
-export type PostFullRow =
-  Prisma.PostGetPayload<{include: typeof fullPostRowInclude}>;
+  tags: {
+    select: {
+      name: true,
+      id: true,
+    },
+  },
+};
+export type PostFullRow = Prisma.PostGetPayload<{ include: typeof fullPostRowInclude }>;
 
 // We are not sending content in previews for performance reasons
 export const postPreviewSelect = {
@@ -29,6 +29,5 @@ export const postPreviewSelect = {
   createdAt: true,
   updatedAt: true,
   tags: { select: { name: true, id: true } },
-}
-export type PostPreviewRow =
-  Prisma.PostGetPayload<{ select: typeof postPreviewSelect }>;
+};
+export type PostPreviewRow = Prisma.PostGetPayload<{ select: typeof postPreviewSelect }>;
