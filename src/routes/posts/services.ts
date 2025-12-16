@@ -33,6 +33,10 @@ export async function fetchPostBySlug(slug: string): Promise<t.FullPost> {
   return await r.selectPostBySlug(slug) ?? throwNotFoundError('Post not found');
 }
 
-export async function fetchAllPostsPreview(): Promise<t.PostPreview[]> {
-  return await r.selectAllPostsPreviews();
+export async function fetchAllPublishedPostsPreview(): Promise<t.PostPreview[]> {
+  return await r.selectAllPublishedPostsPreviews();
+}
+
+export async function fetchAllDrafts(): Promise<t.FullPost[]> {
+  return await r.selectAllDrafts();
 }

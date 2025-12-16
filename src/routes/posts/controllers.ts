@@ -10,7 +10,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/',
     async () => {
-      return await services.fetchAllPostsPreview();
+      return await services.fetchAllPublishedPostsPreview();
     },
     {
       response: {
@@ -38,7 +38,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Get a post by its ID',
+        summary: 'Get a post by its slug',
         tags: ['Posts'],
       }
     }
@@ -63,6 +63,23 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       },
       detail: {
         summary: 'Create',
+        tags: ['Posts'],
+      }
+    }
+  )
+  .get(
+    '/drafts',
+    async () => {
+      return await services.fetchAllDrafts();
+    },
+    {
+      response: {
+        200: t.Array(schemas.fullPostSchema),
+        401: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Get all drafts',
         tags: ['Posts'],
       }
     }

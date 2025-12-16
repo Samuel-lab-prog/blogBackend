@@ -16,16 +16,27 @@ export function insertPost(
 export function selectPostBySlug(slug: string): Promise<t.PostFullRow | null> {
   return withPrismaErrorHandling<t.PostFullRow | null>(() =>
     prisma.post.findFirst({
-      where: { slug },
+      where: { slug, deletedAt: null, status: 'published' },
       include: t.fullPostRowInclude,
     })
   );
 }
 
-export function selectAllPostsPreviews(): Promise<t.PostPreview[]> {
+export function selectAllPublishedPostsPreviews(): Promise<t.PostPreview[]> {
   return withPrismaErrorHandling(() =>
     prisma.post.findMany({
+      where: { status: 'published', deletedAt: null },
       select: t.postPreviewSelect,
+      orderBy: { createdAt: 'desc' },
+    })
+  );
+}
+
+export function selectAllDrafts(): Promise<t.FullPost[]> {
+  return withPrismaErrorHandling(() =>
+    prisma.post.findMany({
+      where: { status: 'draft' },
+      include: t.fullPostRowInclude,
       orderBy: { createdAt: 'desc' },
     })
   );
