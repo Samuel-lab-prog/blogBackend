@@ -4,8 +4,8 @@ import { openapi, fromTypes } from '@elysiajs/openapi';
 import { rateLimit } from 'elysia-rate-limit';
 import { BunAdapter } from 'elysia/adapter/bun';
 
-import { ErrorPlugin } from './utils/errorPlugin';
-import { LoggerPlugin } from './utils/loggerPlugin';
+import { ErrorPlugin } from './utils/plugins/errorPlugin';
+import { LoggerPlugin } from './utils/plugins/loggerPlugin';
 import { sanitize } from './utils/xssClean';
 
 import { postsRouter } from './routes/posts/controllers';

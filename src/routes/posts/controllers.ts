@@ -4,7 +4,7 @@ import { idSchema } from '../../utils/schemas.ts';
 
 import * as services from './services.ts';
 import * as schemas from './schemas.ts';
-import { authPlugin } from '../../utils/authPlugin.ts';
+import { authPlugin } from '../../utils/plugins/authPlugin.ts';
 
 export const postsRouter = new Elysia({ prefix: '/posts' })
   .as('scoped')

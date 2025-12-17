@@ -1,6 +1,6 @@
 import Elysia from 'elysia';
-import { throwUnauthorizedError } from './AppError';
-import { authenticate } from '../routes/auth/services';
+import { throwUnauthorizedError } from './../AppError';
+import { authenticate } from '../../routes/auth/services';
 import { SetupPlugin } from './setupPlugin';
 
 export const authPlugin = new Elysia()

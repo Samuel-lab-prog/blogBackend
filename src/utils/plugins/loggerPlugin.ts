@@ -1,7 +1,6 @@
 import Elysia from 'elysia';
-import { log } from './logger';
+import { log } from '../logger';
 import { SetupPlugin } from './setupPlugin';
-import { requestContext } from './requestContext';
 
 export const LoggerPlugin = new Elysia()
   .use(SetupPlugin)
@@ -14,7 +13,6 @@ export const LoggerPlugin = new Elysia()
     const reqId = crypto.randomUUID();
     store.reqId = reqId;
     store.reqInitiatedAt = performance.now();
-    requestContext.run({ dbTimings: [] }, () => {});
   })
 
   .onAfterResponse({ as: 'scoped' }, ({ store, request, set, responseValue }) => {

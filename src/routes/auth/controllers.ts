@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import { appErrorSchema } from '../../utils/AppError.ts';
 import { loginSchema } from '../../utils/schemas.ts';
 import { login } from '../auth/services.ts';
-import { SetupPlugin } from '../../utils/setupPlugin.ts';
+import { SetupPlugin } from '../../utils/plugins/setupPlugin.ts';
 
 export const authRouter = new Elysia().group('/auth', (app) =>
   app.use(SetupPlugin).post(

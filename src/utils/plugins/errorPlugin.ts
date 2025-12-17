@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Elysia from 'elysia';
-import { AppError } from './AppError.ts';
-import { log } from './logger.ts';
+import { AppError } from '../AppError.ts';
+import { log } from '../logger.ts';
 import { SetupPlugin } from './setupPlugin.ts';
 
 export function handleError(set: any, error: unknown, code: any, reqId: string) {
