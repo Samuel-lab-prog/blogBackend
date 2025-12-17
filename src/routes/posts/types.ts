@@ -35,7 +35,7 @@ export const postPreviewSelect = {
 export type PostPreviewRow = Prisma.PostGetPayload<{ select: typeof postPreviewSelect }>;
 
 export type Filter = {
-  identifier: PostUniqueKey;
+  selectBy: PostUniqueKey | 'all';
   deleted?: 'exclude' | 'only';
   status?: 'published' | 'draft';
 };

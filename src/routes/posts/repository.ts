@@ -14,7 +14,7 @@ import * as t from './types.ts';
 // 7. Functions that modify data should return the modified entity's id or throw if not found.
 // 8. Functions that retrieve single entities should return null if not found.
 
-export function insertPost(data: t.InsertPost): Promise<{ id: number }> {
+export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
   return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.create({
       data,
@@ -23,11 +23,11 @@ export function insertPost(data: t.InsertPost): Promise<{ id: number }> {
   );
 }
 
-export function selectPost(filter: t.Filter): Promise<t.PostFullRow | null> {
+export async function selectPost(filter: t.Filter): Promise<t.PostFullRow | null> {
   return withPrismaErrorHandling<t.PostFullRow | null>(() =>
     prisma.post.findFirst({
       where: {
-        ...filter.identifier,
+        ...(filter.selectBy !== 'all' && filter.selectBy),
         ...(filter.deleted === 'exclude' && { deletedAt: null }),
         ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
         ...(filter.status && { status: filter.status }),
@@ -38,8 +38,9 @@ export function selectPost(filter: t.Filter): Promise<t.PostFullRow | null> {
 }
 
 export async function selectAllPublishedPostsPreviews(
-  cursor: number | null = null,
-  filterTag?: string
+  filter: t.Filter,
+  filterTag?: string,
+  cursor: number | null = null
 ): Promise<{
   items: t.PostPreview[];
   nextCursor?: number;
@@ -50,8 +51,10 @@ export async function selectAllPublishedPostsPreviews(
   const posts = await withPrismaErrorHandling<t.PostPreview[]>(() =>
     prisma.post.findMany({
       where: {
-        status: 'published',
-        deletedAt: null,
+        ...(filter.selectBy !== 'all' && filter.selectBy),
+        ...(filter.deleted === 'exclude' && { deletedAt: null }),
+        ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
+        ...(filter.status && { status: filter.status }),
         ...(filterTag && {
           tags: {
             some: {

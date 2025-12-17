@@ -27,7 +27,11 @@ export async function registerPost(body: t.PostNewPost): Promise<{ id: number }>
 }
 
 export async function fetchPost(identifier: t.PostUniqueKey): Promise<t.FullPost> {
-  const post = await r.selectPost({ identifier, deleted: 'exclude', status: 'published' });
+  const post = await r.selectPost({
+    selectBy: identifier,
+    deleted: 'exclude',
+    status: 'published',
+  });
   if (!post) {
     throwNotFoundError('Post not found');
   }
@@ -38,7 +42,11 @@ export async function fetchAllPostsPreviews(
   cursor?: number,
   tag?: string
 ): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean }> {
-  return await r.selectAllPublishedPostsPreviews(cursor, tag);
+  return await r.selectAllPublishedPostsPreviews(
+    { selectBy: 'all', deleted: 'exclude', status: 'published' },
+    tag,
+    cursor
+  );
 }
 
 export async function fetchAllDrafts(): Promise<t.FullPost[]> {

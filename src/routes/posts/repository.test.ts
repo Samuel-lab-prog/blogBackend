@@ -58,27 +58,27 @@ describe('Post repository', () => {
   });
 
   it('selectPostById -> Should return null if the post does not exist', async () => {
-    const post = await r.selectPost({ identifier: { id: ABSURD_ID } });
+    const post = await r.selectPost({ selectBy: { id: ABSURD_ID } });
     expect(post).toBeNull();
   });
 
   it('selectPostById -> Should return a full post', async () => {
     const created = await r.insertPost(DEFAULT_POST);
-    const post = await r.selectPost({ identifier: { id: created.id } });
+    const post = await r.selectPost({ selectBy: { id: created.id } });
 
     expect(post).not.toBeNull();
     expect(post!.title).toBe(DEFAULT_POST.title);
   });
 
   it('selectAllPostsPreviews -> Should return empty list if no published posts', async () => {
-    const result = await r.selectAllPublishedPostsPreviews();
+    const result = await r.selectAllPublishedPostsPreviews({ selectBy: 'all' });
 
     expect(result.items).toHaveLength(0);
     expect(result.hasMore).toBe(false);
     expect(result.nextCursor).toBeUndefined();
   });
 
-  it('selectAllPostsPreviews -> Should return only published posts', async () => {
+  it('selectAllPostsPreviews -> Should return only published posts if configured', async () => {
     await r.insertPost({
       ...DEFAULT_POST,
       title: 'Draft',
@@ -98,7 +98,11 @@ describe('Post repository', () => {
       status: 'published',
     });
 
-    const result = await r.selectAllPublishedPostsPreviews();
+    const result = await r.selectAllPublishedPostsPreviews({
+      selectBy: 'all',
+      deleted: 'exclude',
+      status: 'published',
+    });
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.title).toBe('Published');
@@ -125,7 +129,10 @@ describe('Post repository', () => {
       slug: 'without-tag',
     });
 
-    const result = await r.selectAllPublishedPostsPreviews(null, tagName);
+    const result = await r.selectAllPublishedPostsPreviews(
+      { selectBy: 'all', deleted: 'exclude', status: 'published' },
+      tagName
+    );
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.tags.length).toBe(1);
@@ -147,14 +154,18 @@ describe('Post repository', () => {
 
     await Promise.all(posts);
 
-    const firstPage = await r.selectAllPublishedPostsPreviews();
+    const firstPage = await r.selectAllPublishedPostsPreviews({ selectBy: 'all' });
 
     expect(firstPage.items).toHaveLength(10);
     expect(firstPage.hasMore).toBe(true);
     expect(firstPage.nextCursor).toBeDefined();
 
     const cursor = firstPage.nextCursor;
-    const secondPage = await r.selectAllPublishedPostsPreviews(cursor);
+    const secondPage = await r.selectAllPublishedPostsPreviews(
+      { selectBy: 'all', deleted: 'exclude', status: 'published' },
+      undefined,
+      cursor
+    );
 
     expect(secondPage.items.length).toBe(2);
     expect(secondPage.hasMore).toBe(false);
