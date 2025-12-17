@@ -99,7 +99,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .delete(
     '/:id',
     async ({ params, set }) => {
-      const result = await services.softRemovePostById(params.id);
+      const result = await services.softRemovePost({ id: params.id });
       set.status = 200;
       return result;
     },
@@ -124,7 +124,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .patch(
     '/:id',
     async ({ params, body }) => {
-      return await services.modifyPostById(params.id, body);
+      return await services.modifyPost({ id: params.id }, body);
     },
     {
       params: t.Object({
@@ -168,7 +168,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .patch(
     '/:id/restore',
     async ({ params }) => {
-      return await services.restoreDeletedPostById(params.id);
+      return await services.restoreDeletedPost({ id: params.id });
     },
     {
       params: t.Object({
@@ -191,7 +191,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .patch(
     '/:id/status',
     async ({ params, body }) => {
-      return await services.modifyPostStatusById(params.id, body.status);
+      return await services.modifyPostStatus({ id: params.id }, body.status);
     },
     {
       params: t.Object({

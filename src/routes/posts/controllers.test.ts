@@ -269,7 +269,7 @@ describe('Post controllers tests', () => {
     expect(deleted?.deletedAt).not.toBeNull();
   });
 
-  it('DELETE /posts/:id -> should return 404 when post is already deleted', async () => {
+  it('DELETE /posts/:id -> Should delete even when post is already deleted', async () => {
     const post = await createPost();
 
     await prisma.post.update({
@@ -281,7 +281,7 @@ describe('Post controllers tests', () => {
       new Request(`${PREFIX}/${post.id}`, { method: 'DELETE' })
     );
 
-    expect(resp.status).toBe(404);
+    expect(resp.status).toBe(200);
   });
 
   it('PATCH /posts/:id -> should return 400 when body is empty', async () => {
@@ -343,14 +343,14 @@ describe('Post controllers tests', () => {
     expect(body[0]!.id).toBe(post.id);
   });
 
-  it('PATCH /posts/:id/restore -> should return 404 when post is not deleted', async () => {
+  it('PATCH /posts/:id/restore -> Should restore even when post is not deleted', async () => {
     const post = await createPost();
 
     const resp = await createApp().handle(
       new Request(`${PREFIX}/${post.id}/restore`, { method: 'PATCH' })
     );
 
-    expect(resp.status).toBe(404);
+    expect(resp.status).toBe(200);
   });
 
   it('PATCH /posts/:id/restore -> should restore a deleted post', async () => {

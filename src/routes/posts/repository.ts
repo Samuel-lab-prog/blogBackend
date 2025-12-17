@@ -37,7 +37,7 @@ export async function selectPost(filter: t.Filter): Promise<t.PostFullRow | null
   );
 }
 
-export async function selectAllPublishedPostsPreviews(
+export async function selectPostsPreviews(
   filter: t.Filter,
   filterTag?: string,
   cursor: number | null = null
@@ -83,51 +83,11 @@ export async function selectAllPublishedPostsPreviews(
   };
 }
 
-export function selectAllDrafts(): Promise<t.FullPost[]> {
-  return withPrismaErrorHandling<t.FullPost[]>(() =>
-    prisma.post.findMany({
-      where: { status: 'draft', deletedAt: null },
-      include: t.fullPostRowInclude,
-      orderBy: { createdAt: 'desc' },
-    })
-  );
-}
-
-export function softDeletePostById(id: number): Promise<{ id: number }> {
+export function updatePost(key: t.PostUniqueKey, data: t.UpdatePost): Promise<{ id: number }> {
   return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.update({
-      where: { id, deletedAt: null },
-      data: { deletedAt: new Date() },
-      select: { id: true },
-    })
-  );
-}
-
-export function updatePostById(id: number, data: t.UpdatePost): Promise<{ id: number }> {
-  return withPrismaErrorHandling<{ id: number }>(() =>
-    prisma.post.update({
-      where: { id, deletedAt: null },
+      where: key,
       data,
-      select: { id: true },
-    })
-  );
-}
-
-export function selectAllDeletedPosts(): Promise<t.FullPost[]> {
-  return withPrismaErrorHandling<t.FullPost[]>(() =>
-    prisma.post.findMany({
-      where: { deletedAt: { not: null } },
-      include: t.fullPostRowInclude,
-      orderBy: { deletedAt: 'desc' },
-    })
-  );
-}
-
-export function restorePostById(id: number): Promise<{ id: number }> {
-  return withPrismaErrorHandling<{ id: number }>(() =>
-    prisma.post.update({
-      where: { id, deletedAt: { not: null } },
-      data: { deletedAt: null },
       select: { id: true },
     })
   );
@@ -141,12 +101,17 @@ export function selectAllTags(): Promise<t.Tag[]> {
   );
 }
 
-export function updatePostStatusById(id: number, status: t.PostStatus): Promise<{ id: number }> {
-  return withPrismaErrorHandling<{ id: number }>(() =>
-    prisma.post.update({
-      where: { id, deletedAt: null },
-      data: { status },
-      select: { id: true },
+export async function selectPosts(filter: t.Filter): Promise<t.FullPost[]> {
+  return withPrismaErrorHandling<t.FullPost[]>(() =>
+    prisma.post.findMany({
+      where: {
+        ...(filter.selectBy !== 'all' && filter.selectBy),
+        ...(filter.deleted === 'exclude' && { deletedAt: null }),
+        ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
+        ...(filter.status && { status: filter.status }),
+      },
+      include: t.fullPostRowInclude,
+      orderBy: { createdAt: 'desc' },
     })
   );
 }

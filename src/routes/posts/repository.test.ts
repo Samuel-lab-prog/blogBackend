@@ -70,15 +70,15 @@ describe('Post repository', () => {
     expect(post!.title).toBe(DEFAULT_POST.title);
   });
 
-  it('selectAllPostsPreviews -> Should return empty list if no published posts', async () => {
-    const result = await r.selectAllPublishedPostsPreviews({ selectBy: 'all' });
+  it('selectPostsPreviews -> Should return empty list if no published posts', async () => {
+    const result = await r.selectPostsPreviews({ selectBy: 'all' });
 
     expect(result.items).toHaveLength(0);
     expect(result.hasMore).toBe(false);
     expect(result.nextCursor).toBeUndefined();
   });
 
-  it('selectAllPostsPreviews -> Should return only published posts if configured', async () => {
+  it('selectPostsPreviews -> Should return only published posts if configured', async () => {
     await r.insertPost({
       ...DEFAULT_POST,
       title: 'Draft',
@@ -98,7 +98,7 @@ describe('Post repository', () => {
       status: 'published',
     });
 
-    const result = await r.selectAllPublishedPostsPreviews({
+    const result = await r.selectPostsPreviews({
       selectBy: 'all',
       deleted: 'exclude',
       status: 'published',
@@ -108,7 +108,7 @@ describe('Post repository', () => {
     expect(result.items[0]?.title).toBe('Published');
   });
 
-  it('SelectAllPostsPreviews -> Should apply the filter by tag correctly', async () => {
+  it('SelectPostsPreviews -> Should apply the filter by tag correctly', async () => {
     const tagName = 'javascript';
     const tag = await prisma.tag.create({
       data: { name: tagName },
@@ -129,7 +129,7 @@ describe('Post repository', () => {
       slug: 'without-tag',
     });
 
-    const result = await r.selectAllPublishedPostsPreviews(
+    const result = await r.selectPostsPreviews(
       { selectBy: 'all', deleted: 'exclude', status: 'published' },
       tagName
     );
@@ -139,7 +139,7 @@ describe('Post repository', () => {
     expect(result.items[0]?.tags[0]?.name).toBe(tagName);
   });
 
-  it('SelectAllPostsPreviews -> Should return correct pagination with cursor', async () => {
+  it('SelectPostsPreviews -> Should return correct pagination with cursor', async () => {
     const posts = [];
     // Make 12 posts to test pagination (10 per page)
     for (let i = 0; i < 12; i++) {
@@ -154,14 +154,14 @@ describe('Post repository', () => {
 
     await Promise.all(posts);
 
-    const firstPage = await r.selectAllPublishedPostsPreviews({ selectBy: 'all' });
+    const firstPage = await r.selectPostsPreviews({ selectBy: 'all' });
 
     expect(firstPage.items).toHaveLength(10);
     expect(firstPage.hasMore).toBe(true);
     expect(firstPage.nextCursor).toBeDefined();
 
     const cursor = firstPage.nextCursor;
-    const secondPage = await r.selectAllPublishedPostsPreviews(
+    const secondPage = await r.selectPostsPreviews(
       { selectBy: 'all', deleted: 'exclude', status: 'published' },
       undefined,
       cursor
@@ -171,7 +171,7 @@ describe('Post repository', () => {
     expect(secondPage.hasMore).toBe(false);
   });
 
-  it('selectAllDrafts -> Should return only drafts', async () => {
+  it('selectPosts -> Should return only drafts if configured', async () => {
     await r.insertPost({
       ...DEFAULT_POST,
       title: 'Published',
@@ -191,66 +191,42 @@ describe('Post repository', () => {
       deletedAt: new Date(),
     });
 
-    const drafts = await r.selectAllDrafts();
+    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'exclude', status: 'draft' });
 
     expect(drafts).toHaveLength(1);
     expect(drafts[0]?.status).toBe('draft');
   });
 
-  it('selectAllDrafts -> Should return empty list if no drafts', async () => {
-    const drafts = await r.selectAllDrafts();
+  it('selectPosts -> Should select only deleted posts if configured', async () => {
+    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'only' });
     expect(drafts).toHaveLength(0);
   });
 
-  it('softDeletePostById -> Should mark post as deleted (soft delete)', async () => {
+  it('updatePost -> Should mark post as deleted (soft delete)', async () => {
     const created = await r.insertPost(DEFAULT_POST);
 
-    await r.softDeletePostById(created.id);
+    await r.updatePost({ id: created.id }, { deletedAt: new Date() });
 
-    const deletedPost = await prisma.post.findUnique({ where: { id: created.id } });
+    const deletedPost = await prisma.post.findUnique({
+      where: { id: created.id },
+    });
+
     expect(deletedPost?.deletedAt).toBeInstanceOf(Date);
   });
 
-  it('softDeletePostById -> Should throw when deleting a non-existing post', async () => {
-    expect(r.softDeletePostById(ABSURD_ID)).rejects.toThrow(AppError);
+  it('updatePost -> Should throw when deleting a non-existing post', async () => {
+    expect(
+      r.updatePost({ id: ABSURD_ID }, { deletedAt: new Date() })
+    ).rejects.toThrow(AppError);
   });
 
-  it('updatePostById -> Should update post if not deleted', async () => {
-    const created = await r.insertPost(DEFAULT_POST);
-
-    await r.updatePostById(created.id, { title: 'New' });
-
-    const updated = await prisma.post.findUnique({ where: { id: created.id } });
-    expect(updated?.title).toBe('New');
+  it('updatePost -> Should throw when updating a non-existing post', async () => {
+    expect(
+      r.updatePost({ id: ABSURD_ID }, { title: 'New' })
+    ).rejects.toThrow(AppError);
   });
 
-  it('updatePostById -> Should throw when updating a non-existing post', async () => {
-    expect(r.updatePostById(ABSURD_ID, { title: 'New' })).rejects.toThrow(AppError);
-  });
-
-  it('selectAllDeletedPosts -> Should return only deleted posts', async () => {
-    await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Active',
-      slug: 'active',
-    });
-    const deleted = await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Deleted',
-      slug: 'deleted',
-    });
-
-    await r.softDeletePostById(deleted.id);
-    const deletedPosts = await r.selectAllDeletedPosts();
-    expect(deletedPosts).toHaveLength(1);
-  });
-
-  it('selectAllDeletedPosts -> Should return empty list if no deleted posts', async () => {
-    const deletedPosts = await r.selectAllDeletedPosts();
-    expect(deletedPosts).toHaveLength(0);
-  });
-
-  it('restorePostById -> Should restore a soft deleted post', async () => {
+  it('updatePost -> Should restore a soft deleted post', async () => {
     const created = await r.insertPost({
       ...DEFAULT_POST,
       title: 'To be restored',
@@ -258,14 +234,40 @@ describe('Post repository', () => {
       deletedAt: new Date(),
     });
 
-    await r.restorePostById(created.id);
+    await r.updatePost({ id: created.id }, { deletedAt: null });
 
-    const restored = await prisma.post.findUnique({ where: { id: created.id } });
+    const restored = await prisma.post.findUnique({
+      where: { id: created.id },
+    });
+
     expect(restored?.deletedAt).toBeNull();
   });
 
-  it('restorePostById -> Should throw when restoring a non-existing post', async () => {
-    expect(r.restorePostById(ABSURD_ID)).rejects.toThrow(AppError);
+  it('updatePost -> Should throw when restoring a non-existing post', async () => {
+    expect(
+      r.updatePost({ id: ABSURD_ID }, { deletedAt: null })
+    ).rejects.toThrow(AppError);
+  });
+
+  it('updatePost -> Should update post status', async () => {
+    const created = await r.insertPost({
+      ...DEFAULT_POST,
+      title: 'Status Update',
+      slug: 'status-update',
+      status: 'draft',
+    });
+    await r.updatePost({ id: created.id }, { status: 'published' });
+
+    const updated = await prisma.post.findUnique({
+      where: { id: created.id },
+    });
+    expect(updated?.status).toBe('published');
+  });
+
+  it('updatePost -> Should throw when updating status of a non-existing post', async () => {
+    expect(
+      r.updatePost({ id: ABSURD_ID }, { status: 'draft' })
+    ).rejects.toThrow(AppError);
   });
 
   it('selectAllTags -> Should return tags ordered by name', async () => {
@@ -283,17 +285,5 @@ describe('Post repository', () => {
   it('selectAllTags -> Should return empty list if no tags', async () => {
     const tags = await r.selectAllTags();
     expect(tags).toHaveLength(0);
-  });
-
-  it('updatePostStatusById -> Should update the post status', async () => {
-    const created = await r.insertPost(DEFAULT_POST);
-    await r.updatePostStatusById(created.id, 'draft');
-
-    const updated = await prisma.post.findUnique({ where: { id: created.id } });
-    expect(updated?.status).toBe('draft');
-  });
-
-  it('updatePostStatusById -> Should throw when updating status of a non-existing post', async () => {
-    expect(r.updatePostStatusById(ABSURD_ID, 'draft')).rejects.toThrow(AppError);
   });
 });

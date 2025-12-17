@@ -42,7 +42,7 @@ export async function fetchAllPostsPreviews(
   cursor?: number,
   tag?: string
 ): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean }> {
-  return await r.selectAllPublishedPostsPreviews(
+  return await r.selectPostsPreviews(
     { selectBy: 'all', deleted: 'exclude', status: 'published' },
     tag,
     cursor
@@ -50,14 +50,14 @@ export async function fetchAllPostsPreviews(
 }
 
 export async function fetchAllDrafts(): Promise<t.FullPost[]> {
-  return await r.selectAllDrafts();
+  return await r.selectPosts({ selectBy: 'all', deleted: 'exclude', status: 'draft' });
 }
 
-export async function softRemovePostById(id: number): Promise<{ id: number }> {
-  return await r.softDeletePostById(id);
+export async function softRemovePost(identifier: t.PostUniqueKey): Promise<{ id: number }> {
+  return await r.updatePost(identifier, { deletedAt: new Date() });
 }
 
-export async function modifyPostById(id: number, data: t.PatchPost): Promise<{ id: number }> {
+export async function modifyPost(identifier: t.PostUniqueKey, data: t.PatchPost): Promise<{ id: number }> {
   const prismaData: Partial<t.UpdatePost> = {
     title: data.title,
     excerpt: data.excerpt,
@@ -76,20 +76,20 @@ export async function modifyPostById(id: number, data: t.PatchPost): Promise<{ i
       set: data.tags.map((tag) => ({ id: tag })),
     };
   }
-  return await r.updatePostById(id, prismaData);
+  return await r.updatePost(identifier, prismaData);
 }
 
 export async function fetchAllDeletedPosts(): Promise<t.FullPost[]> {
-  return await r.selectAllDeletedPosts();
+  return await r.selectPosts({ selectBy: 'all', deleted: 'only' });
 }
 
-export async function restoreDeletedPostById(id: number): Promise<{ id: number }> {
-  return await r.restorePostById(id);
+export async function restoreDeletedPost(identifier: t.PostUniqueKey): Promise<{ id: number }> {
+  return await r.updatePost(identifier, { deletedAt: null });
 }
 
-export async function modifyPostStatusById(
-  id: number,
+export async function modifyPostStatus(
+  identifier: t.PostUniqueKey,
   status: t.PostStatus
 ): Promise<{ id: number }> {
-  return await r.updatePostStatusById(id, status);
+  return await r.updatePost(identifier, { status });
 }
