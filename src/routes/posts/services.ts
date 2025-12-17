@@ -57,7 +57,10 @@ export async function softRemovePost(identifier: t.PostUniqueKey): Promise<{ id:
   return await r.updatePost(identifier, { deletedAt: new Date() });
 }
 
-export async function modifyPost(identifier: t.PostUniqueKey, data: t.PatchPost): Promise<{ id: number }> {
+export async function modifyPost(
+  identifier: t.PostUniqueKey,
+  data: t.PatchPost
+): Promise<{ id: number }> {
   const prismaData: Partial<t.UpdatePost> = {
     title: data.title,
     excerpt: data.excerpt,

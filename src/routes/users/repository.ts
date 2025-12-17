@@ -9,4 +9,3 @@ export function selectUser(identifier: t.UserUniqueKey): Promise<t.UserRow | nul
     })
   );
 }
-

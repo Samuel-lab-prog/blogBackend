@@ -215,15 +215,11 @@ describe('Post repository', () => {
   });
 
   it('updatePost -> Should throw when deleting a non-existing post', async () => {
-    expect(
-      r.updatePost({ id: ABSURD_ID }, { deletedAt: new Date() })
-    ).rejects.toThrow(AppError);
+    expect(r.updatePost({ id: ABSURD_ID }, { deletedAt: new Date() })).rejects.toThrow(AppError);
   });
 
   it('updatePost -> Should throw when updating a non-existing post', async () => {
-    expect(
-      r.updatePost({ id: ABSURD_ID }, { title: 'New' })
-    ).rejects.toThrow(AppError);
+    expect(r.updatePost({ id: ABSURD_ID }, { title: 'New' })).rejects.toThrow(AppError);
   });
 
   it('updatePost -> Should restore a soft deleted post', async () => {
@@ -244,9 +240,7 @@ describe('Post repository', () => {
   });
 
   it('updatePost -> Should throw when restoring a non-existing post', async () => {
-    expect(
-      r.updatePost({ id: ABSURD_ID }, { deletedAt: null })
-    ).rejects.toThrow(AppError);
+    expect(r.updatePost({ id: ABSURD_ID }, { deletedAt: null })).rejects.toThrow(AppError);
   });
 
   it('updatePost -> Should update post status', async () => {
@@ -265,9 +259,7 @@ describe('Post repository', () => {
   });
 
   it('updatePost -> Should throw when updating status of a non-existing post', async () => {
-    expect(
-      r.updatePost({ id: ABSURD_ID }, { status: 'draft' })
-    ).rejects.toThrow(AppError);
+    expect(r.updatePost({ id: ABSURD_ID }, { status: 'draft' })).rejects.toThrow(AppError);
   });
 
   it('selectTags -> Should return tags ordered by name', async () => {
