@@ -57,17 +57,48 @@ describe('Post repository', () => {
     expect(created).rejects.toThrow(AppError);
   });
 
-  it('selectPostById -> Should return null if the post does not exist', async () => {
-    const post = await r.selectPost({ selectBy: { id: ABSURD_ID } });
-    expect(post).toBeNull();
+  it('selectPosts -> Should return empty array if no posts match the filter', async () => {
+    const posts = await r.selectPosts({ selectBy: { id: ABSURD_ID } });
+    expect(posts).toHaveLength(0);
   });
 
-  it('selectPostById -> Should return a full post', async () => {
-    const created = await r.insertPost(DEFAULT_POST);
-    const post = await r.selectPost({ selectBy: { id: created.id } });
+  it('selectPosts -> Should return only drafts if configured', async () => {
+    await r.insertPost({
+      ...DEFAULT_POST,
+      title: 'Published',
+      slug: 'published',
+      status: 'published',
+    });
+    await r.insertPost({
+      ...DEFAULT_POST,
+      title: 'Draft',
+      slug: 'draft',
+      status: 'draft',
+    });
+    await r.insertPost({
+      ...DEFAULT_POST,
+      title: 'Deleted Published',
+      slug: 'deleted-published',
+      deletedAt: new Date(),
+    });
 
-    expect(post).not.toBeNull();
-    expect(post!.title).toBe(DEFAULT_POST.title);
+    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'exclude', status: 'draft' });
+
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0]?.status).toBe('draft');
+  });
+
+  it('selectPosts -> Should select only deleted posts if configured', async () => {
+    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'only' });
+    expect(drafts).toHaveLength(0);
+  });
+
+  it('selectPosts -> Should return a full post', async () => {
+    const created = await r.insertPost(DEFAULT_POST);
+    const posts = await r.selectPosts({ selectBy: { id: created.id } });
+
+    expect(posts).not.toBeNull();
+    expect(posts[0]!.title).toBe(DEFAULT_POST.title);
   });
 
   it('selectPostsPreviews -> Should return empty list if no published posts', async () => {
@@ -171,37 +202,6 @@ describe('Post repository', () => {
     expect(secondPage.hasMore).toBe(false);
   });
 
-  it('selectPosts -> Should return only drafts if configured', async () => {
-    await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Published',
-      slug: 'published',
-      status: 'published',
-    });
-    await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Draft',
-      slug: 'draft',
-      status: 'draft',
-    });
-    await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Deleted Published',
-      slug: 'deleted-published',
-      deletedAt: new Date(),
-    });
-
-    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'exclude', status: 'draft' });
-
-    expect(drafts).toHaveLength(1);
-    expect(drafts[0]?.status).toBe('draft');
-  });
-
-  it('selectPosts -> Should select only deleted posts if configured', async () => {
-    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'only' });
-    expect(drafts).toHaveLength(0);
-  });
-
   it('updatePost -> Should mark post as deleted (soft delete)', async () => {
     const created = await r.insertPost(DEFAULT_POST);
 
@@ -270,20 +270,20 @@ describe('Post repository', () => {
     ).rejects.toThrow(AppError);
   });
 
-  it('selectAllTags -> Should return tags ordered by name', async () => {
+  it('selectTags -> Should return tags ordered by name', async () => {
     await prisma.tag.createMany({
       data: [{ name: 'zeta' }, { name: 'alpha' }],
     });
 
-    const tags = await r.selectAllTags();
+    const tags = await r.selectTags();
 
     expect(tags).toHaveLength(2);
     expect(tags[0]?.name).toBe('alpha');
     expect(tags[1]?.name).toBe('zeta');
   });
 
-  it('selectAllTags -> Should return empty list if no tags', async () => {
-    const tags = await r.selectAllTags();
+  it('selectTags -> Should return empty list if no tags', async () => {
+    const tags = await r.selectTags();
     expect(tags).toHaveLength(0);
   });
 });

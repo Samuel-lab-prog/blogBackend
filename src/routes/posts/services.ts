@@ -27,15 +27,15 @@ export async function registerPost(body: t.PostNewPost): Promise<{ id: number }>
 }
 
 export async function fetchPost(identifier: t.PostUniqueKey): Promise<t.FullPost> {
-  const post = await r.selectPost({
+  const posts = await r.selectPosts({
     selectBy: identifier,
     deleted: 'exclude',
     status: 'published',
   });
-  if (!post) {
+  if (!posts[0]) {
     throwNotFoundError('Post not found');
   }
-  return post;
+  return posts[0];
 }
 
 export async function fetchAllPostsPreviews(

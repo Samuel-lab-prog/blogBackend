@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { generateToken, verifyToken } from '../../utils/jwt.ts';
-import { selectUserByEmail } from '../users/models.ts';
+import { selectUser } from '../users/repository.ts';
 import { throwUnauthorizedError } from '../../utils/AppError.ts';
 import type { UserRow } from '../users/types.ts';
 
@@ -8,7 +8,7 @@ export async function login(
   email: string,
   password: string
 ): Promise<{ data: { id: number }; token: string }> {
-  const user = await selectUserByEmail(email);
+  const user = await selectUser({ email });
 
   if (user && (await bcrypt.compare(password, user.password))) {
     return {
@@ -28,7 +28,7 @@ export async function authenticate(token: string): Promise<UserRow | null> {
     if (!payload || !payload.email) {
       return null;
     }
-    return await selectUserByEmail(payload.email);
+    return await selectUser({ email: payload.email });
   } catch {
     return null;
   }
