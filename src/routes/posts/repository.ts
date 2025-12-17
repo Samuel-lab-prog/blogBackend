@@ -14,8 +14,8 @@ import * as t from './types.ts';
 // 7. Functions that modify data should return the modified entity's id or throw if not found.
 // 8. Functions that retrieve single entities should return null if not found.
 
-export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
-  return await withPrismaErrorHandling<{ id: number }>(async () =>
+export function insertPost(data: t.InsertPost): Promise<{ id: number }> {
+  return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.create({
       data,
       select: { id: true },
@@ -23,10 +23,15 @@ export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
   );
 }
 
-export function selectPostById(id: number): Promise<t.PostFullRow | null> {
+export function selectPost(filter: t.Filter): Promise<t.PostFullRow | null> {
   return withPrismaErrorHandling<t.PostFullRow | null>(() =>
     prisma.post.findFirst({
-      where: { id, deletedAt: null, status: 'published' },
+      where: {
+        ...filter.identifier,
+        ...(filter.deleted === 'exclude' && { deletedAt: null }),
+        ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
+        ...(filter.status && { status: filter.status }),
+      },
       include: t.fullPostRowInclude,
     })
   );

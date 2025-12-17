@@ -38,7 +38,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/:id',
     async ({ params }) => {
-      return await services.fetchPostById(params.id);
+      return services.fetchPost(params);
     },
     {
       params: t.Object({

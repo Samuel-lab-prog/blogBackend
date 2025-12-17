@@ -7,16 +7,17 @@ export async function registerPost(body: t.PostNewPost): Promise<{ id: number }>
   const slug = slugify(body.title, { lower: true, strict: true });
   const { tags, ...postData } = body;
 
-  const normalizedTags = tags?.map(
-    (tag) => tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase()
-  );
+  const normalizedTags = tags
+    ?.map((tag) => tag.trim())
+    .filter(Boolean)
+    .map((tag) => tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase());
 
-  return await r.insertPost({
+  return r.insertPost({
     ...postData,
     slug,
-    tags: tags
+    tags: normalizedTags?.length
       ? {
-          connectOrCreate: normalizedTags?.map((tag) => ({
+          connectOrCreate: normalizedTags.map((tag) => ({
             where: { name: tag },
             create: { name: tag },
           })),
@@ -25,8 +26,8 @@ export async function registerPost(body: t.PostNewPost): Promise<{ id: number }>
   });
 }
 
-export async function fetchPostById(id: number): Promise<t.FullPost> {
-  const post = await r.selectPostById(id);
+export async function fetchPost(identifier: t.PostUniqueKey): Promise<t.FullPost> {
+  const post = await r.selectPost({ identifier, deleted: 'exclude', status: 'published' });
   if (!post) {
     throwNotFoundError('Post not found');
   }

@@ -7,10 +7,10 @@ export type PatchPost = (typeof s.patchPost)['static'];
 export type FullPost = (typeof s.fullPostSchema)['static'];
 export type PaginatedPosts = (typeof s.paginatedPostsSchema)['static'];
 export type PostPreview = (typeof s.postPreviewSchema)['static'];
-export type InsertPost = PostCreateInput;
-export type UpdatePost = PostUpdateInput;
 export type PostStatus = (typeof s.fullPostSchema.properties.status)['static'];
 export type Tag = (typeof s.fullPostSchema.properties.tags.items)['static'];
+export type InsertPost = PostCreateInput;
+export type UpdatePost = PostUpdateInput;
 
 export const fullPostRowInclude = {
   tags: {
@@ -33,3 +33,17 @@ export const postPreviewSelect = {
   tags: { select: { name: true, id: true } },
 };
 export type PostPreviewRow = Prisma.PostGetPayload<{ select: typeof postPreviewSelect }>;
+
+export type Filter = {
+  identifier: PostUniqueKey;
+  deleted?: 'exclude' | 'only';
+  status?: 'published' | 'draft';
+};
+
+type Without<T, U> = {
+  [P in Exclude<keyof T, keyof U>]?: never;
+};
+
+type XOR<T, U> = (T & Without<U, T>) | (U & Without<T, U>);
+
+export type PostUniqueKey = XOR<{ id: number }, { slug: string }>;

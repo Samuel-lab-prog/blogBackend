@@ -58,35 +58,13 @@ describe('Post repository', () => {
   });
 
   it('selectPostById -> Should return null if the post does not exist', async () => {
-    const post = await r.selectPostById(ABSURD_ID);
+    const post = await r.selectPost({ identifier: { id: ABSURD_ID } });
     expect(post).toBeNull();
   });
 
-  it('selectPostById -> Should return null if the post is in draft', async () => {
-    const created = await r.insertPost({
-      ...DEFAULT_POST,
-      status: 'draft',
-    });
-
-    const post = await r.selectPostById(created.id);
-    expect(post).toBeNull();
-  });
-
-  it('selectPostById -> Should return null if the post is soft deleted', async () => {
-    const created = await prisma.post.create({
-      data: {
-        ...DEFAULT_POST,
-        deletedAt: new Date(),
-      },
-    });
-
-    const post = await r.selectPostById(created.id);
-    expect(post).toBeNull();
-  });
-
-  it('selectPostById -> Should return the full post if published and not deleted', async () => {
+  it('selectPostById -> Should return a full post', async () => {
     const created = await r.insertPost(DEFAULT_POST);
-    const post = await r.selectPostById(created.id);
+    const post = await r.selectPost({ identifier: { id: created.id } });
 
     expect(post).not.toBeNull();
     expect(post!.title).toBe(DEFAULT_POST.title);
