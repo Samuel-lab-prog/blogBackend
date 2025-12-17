@@ -2,8 +2,20 @@ import { prisma } from '../../prisma/client.ts';
 import { withPrismaErrorHandling } from '../../utils/AppError.ts';
 import * as t from './types.ts';
 
-export function insertPost(data: t.InsertPost): Promise<{ id: number }> {
-  return withPrismaErrorHandling<{ id: number }>(() =>
+// Before addding or modifying functions here, make sure to add tests in repository.test.ts
+// I'm also using some patterns to keep the code consistent and easy to read.
+
+// 1. All functions are exported named functions.
+// 2. All functions use withPrismaErrorHandling to wrap prisma calls (read more in AppError.ts).
+// 3. All functions have explicit return types.
+// 4. Function names are descriptive and follow the pattern of action + entity + additionalInfo (if needed).
+// 5. Function names are using SQL terminology where applicable (e.g., select, insert, update, delete).
+// 6. Functions that return lists should return empty lists instead of null.
+// 7. Functions that modify data should return the modified entity's id or throw if not found.
+// 8. Functions that retrieve single entities should return null if not found.
+
+export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
+  return await withPrismaErrorHandling<{ id: number }>(async () =>
     prisma.post.create({
       data,
       select: { id: true },
@@ -30,7 +42,7 @@ export async function selectAllPublishedPostsPreviews(
 }> {
   const takeCount = 10;
 
-  const posts = await withPrismaErrorHandling(() =>
+  const posts = await withPrismaErrorHandling<t.PostPreview[]>(() =>
     prisma.post.findMany({
       where: {
         status: 'published',
@@ -64,9 +76,9 @@ export async function selectAllPublishedPostsPreviews(
 }
 
 export function selectAllDrafts(): Promise<t.FullPost[]> {
-  return withPrismaErrorHandling(() =>
+  return withPrismaErrorHandling<t.FullPost[]>(() =>
     prisma.post.findMany({
-      where: { status: 'draft' },
+      where: { status: 'draft', deletedAt: null },
       include: t.fullPostRowInclude,
       orderBy: { createdAt: 'desc' },
     })
@@ -74,7 +86,7 @@ export function selectAllDrafts(): Promise<t.FullPost[]> {
 }
 
 export function softDeletePostById(id: number): Promise<{ id: number }> {
-  return withPrismaErrorHandling(() =>
+  return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.update({
       where: { id, deletedAt: null },
       data: { deletedAt: new Date() },
@@ -84,7 +96,7 @@ export function softDeletePostById(id: number): Promise<{ id: number }> {
 }
 
 export function updatePostById(id: number, data: t.UpdatePost): Promise<{ id: number }> {
-  return withPrismaErrorHandling(() =>
+  return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.update({
       where: { id, deletedAt: null },
       data,
@@ -94,7 +106,7 @@ export function updatePostById(id: number, data: t.UpdatePost): Promise<{ id: nu
 }
 
 export function selectAllDeletedPosts(): Promise<t.FullPost[]> {
-  return withPrismaErrorHandling(() =>
+  return withPrismaErrorHandling<t.FullPost[]>(() =>
     prisma.post.findMany({
       where: { deletedAt: { not: null } },
       include: t.fullPostRowInclude,
@@ -104,7 +116,7 @@ export function selectAllDeletedPosts(): Promise<t.FullPost[]> {
 }
 
 export function restorePostById(id: number): Promise<{ id: number }> {
-  return withPrismaErrorHandling(() =>
+  return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.update({
       where: { id, deletedAt: { not: null } },
       data: { deletedAt: null },
@@ -113,10 +125,20 @@ export function restorePostById(id: number): Promise<{ id: number }> {
   );
 }
 
-export function selectAllTags() {
-  return withPrismaErrorHandling(() =>
+export function selectAllTags(): Promise<t.Tag[]> {
+  return withPrismaErrorHandling<t.Tag[]>(() =>
     prisma.tag.findMany({
       orderBy: { name: 'asc' },
+    })
+  );
+}
+
+export function updatePostStatusById(id: number, status: t.PostStatus): Promise<{ id: number }> {
+  return withPrismaErrorHandling<{ id: number }>(() =>
+    prisma.post.update({
+      where: { id, deletedAt: null },
+      data: { status },
+      select: { id: true },
     })
   );
 }

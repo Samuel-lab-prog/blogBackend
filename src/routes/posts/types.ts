@@ -9,6 +9,8 @@ export type PaginatedPosts = (typeof s.paginatedPostsSchema)['static'];
 export type PostPreview = (typeof s.postPreviewSchema)['static'];
 export type InsertPost = PostCreateInput;
 export type UpdatePost = PostUpdateInput;
+export type PostStatus = (typeof s.fullPostSchema.properties.status)['static'];
+export type Tag = (typeof s.fullPostSchema.properties.tags.items)['static'];
 
 export const fullPostRowInclude = {
   tags: {

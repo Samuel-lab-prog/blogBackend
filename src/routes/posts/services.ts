@@ -77,3 +77,10 @@ export async function fetchAllDeletedPosts(): Promise<t.FullPost[]> {
 export async function restoreDeletedPostById(id: number): Promise<{ id: number }> {
   return await r.restorePostById(id);
 }
+
+export async function modifyPostStatusById(
+  id: number,
+  status: t.PostStatus
+): Promise<{ id: number }> {
+  return await r.updatePostStatusById(id, status);
+}

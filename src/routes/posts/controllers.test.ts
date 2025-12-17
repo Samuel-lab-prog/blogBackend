@@ -373,4 +373,28 @@ describe('Post controllers tests', () => {
 
     expect(restored?.deletedAt).toBeNull();
   });
+  it('PATCH /posts/:id/status -> should return 404 when post does not exist', async () => {
+    const resp = await createApp().handle(
+      jsonRequest(`${PREFIX}/999999/status`, {
+        method: 'PATCH',
+        body: { status: 'draft' },
+      })
+    );
+    expect(resp.status).toBe(404);
+  });
+
+  it('PATCH /posts/:id/status -> should update post status', async () => {
+    const post = await createPost({ status: 'draft' });
+    const resp = await createApp().handle(
+      jsonRequest(`${PREFIX}/${post.id}/status`, {
+        method: 'PATCH',
+        body: { status: 'published' },
+      })
+    );
+    expect(resp.status).toBe(200);
+    const updated = await prisma.post.findUnique({
+      where: { id: post.id },
+    });
+    expect(updated?.status).toBe('published');
+  });
 });

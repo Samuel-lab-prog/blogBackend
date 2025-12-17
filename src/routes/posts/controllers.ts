@@ -187,4 +187,31 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         tags: ['Posts'],
       },
     }
+  )
+  .patch(
+    '/:id/status',
+    async ({ params, body }) => {
+      return await services.modifyPostStatusById(params.id, body.status);
+    },
+    {
+      params: t.Object({
+        id: idSchema,
+      }),
+      body: t.Object({
+        status: schemas.fullPostSchema.properties.status,
+      }),
+      response: {
+        200: t.Object({
+          id: idSchema,
+        }),
+        400: appErrorSchema,
+        401: appErrorSchema,
+        404: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Update post status by its ID',
+        tags: ['Posts'],
+      },
+    }
   );
