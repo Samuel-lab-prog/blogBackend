@@ -66,25 +66,16 @@ describe('Post controllers tests', () => {
     expect(body.nextCursor).toBeUndefined();
   });
 
-  it('GET /posts -> should return up to 10 published posts', async () => {
-    await createPublishedPosts(10);
+  it('GET /posts -> Should paginate correctly', async () => {
+    const POSTS_COUNT = 20;
+    const LIMIT = 5;
+    await createPublishedPosts(POSTS_COUNT);
 
-    const resp = await createApp().handle(new Request(PREFIX));
+    const resp = await createApp().handle(new Request(`${PREFIX}?limit=${LIMIT}`));
     const body = (await resp.json()) as t.PaginatedPosts;
 
     expect(resp.status).toBe(200);
-    expect(body.items).toHaveLength(10);
-    expect(body.hasMore).toBe(false);
-  });
-
-  it('GET /posts -> should paginate when more than 10 posts exist', async () => {
-    await createPublishedPosts(12);
-
-    const resp = await createApp().handle(new Request(PREFIX));
-    const body = (await resp.json()) as t.PaginatedPosts;
-
-    expect(resp.status).toBe(200);
-    expect(body.items).toHaveLength(10);
+    expect(body.items).toHaveLength(LIMIT);
     expect(body.hasMore).toBe(true);
     expect(body.nextCursor).toBeDefined();
 

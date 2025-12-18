@@ -44,10 +44,8 @@ export async function fetchAllPostsPreviews(
   limit?: number
 ): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean }> {
   return await r.selectPostsPreviews(
-    { selectBy: 'all', deleted: 'exclude', status: 'published' },
-    tag,
-    cursor,
-    limit
+    { selectBy: 'all', deleted: 'exclude', status: 'published', tag },
+    { cursor, limit }
   );
 }
 

@@ -9,15 +9,14 @@ const DEFAULT_POST: t.InsertPost = {
   slug: 'default-title',
   content: 'This is a sample post content.',
   excerpt: 'This is a sample excerpt.',
-  status: 'published',
 };
 
 const ABSURD_ID = 10000000;
 
 describe('Post repository', () => {
   beforeEach(async () => {
-    await prisma.post.deleteMany();
     await prisma.tag.deleteMany();
+    await prisma.post.deleteMany();
   });
 
   it('insertPost -> Should insert a post without tags and return only the id', async () => {
@@ -39,12 +38,7 @@ describe('Post repository', () => {
   });
 
   it('insertPost -> Default status should be published if not provided', async () => {
-    const result = await r.insertPost({
-      title: 'No Status Post',
-      slug: 'no-status-post',
-      content: 'Content here',
-      excerpt: 'Excerpt here',
-    });
+    const result = await r.insertPost(DEFAULT_POST);
 
     const dbPost = await prisma.post.findUnique({ where: { id: result.id } });
     expect(dbPost?.status).toBe('published');
@@ -160,10 +154,12 @@ describe('Post repository', () => {
       slug: 'without-tag',
     });
 
-    const result = await r.selectPostsPreviews(
-      { selectBy: 'all', deleted: 'exclude', status: 'published' },
-      tagName
-    );
+    const result = await r.selectPostsPreviews({
+      selectBy: 'all',
+      deleted: 'exclude',
+      status: 'published',
+      tag: tagName,
+    });
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.tags.length).toBe(1);
@@ -172,8 +168,10 @@ describe('Post repository', () => {
 
   it('SelectPostsPreviews -> Should return correct pagination with cursor', async () => {
     const posts = [];
-    // Make 12 posts to test pagination (10 per page)
-    for (let i = 0; i < 12; i++) {
+    const POSTS_COUNT = 15;
+    const LIMIT = 5;
+
+    for (let i = 0; i < POSTS_COUNT; i++) {
       posts.push(
         r.insertPost({
           ...DEFAULT_POST,
@@ -184,22 +182,20 @@ describe('Post repository', () => {
     }
 
     await Promise.all(posts);
+    const firstPage = await r.selectPostsPreviews({ selectBy: 'all' }, { limit: LIMIT });
 
-    const firstPage = await r.selectPostsPreviews({ selectBy: 'all' });
-
-    expect(firstPage.items).toHaveLength(10);
+    expect(firstPage.items).toHaveLength(LIMIT);
     expect(firstPage.hasMore).toBe(true);
     expect(firstPage.nextCursor).toBeDefined();
 
     const cursor = firstPage.nextCursor;
     const secondPage = await r.selectPostsPreviews(
       { selectBy: 'all', deleted: 'exclude', status: 'published' },
-      undefined,
-      cursor
+      { cursor, limit: LIMIT }
     );
 
-    expect(secondPage.items.length).toBe(2);
-    expect(secondPage.hasMore).toBe(false);
+    expect(secondPage.items.length).toBe(LIMIT);
+    expect(secondPage.hasMore).toBe(POSTS_COUNT > LIMIT * 2);
   });
 
   it('updatePost -> Should mark post as deleted (soft delete)', async () => {

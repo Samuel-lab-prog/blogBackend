@@ -5,7 +5,9 @@ let level = undefined;
 
 if (env === 'production') {
   level = 'info';
-} else {
+} else if (env === 'test') {
+  level = 'silent';
+} else if (env === 'development') {
   level = 'debug';
 }
 

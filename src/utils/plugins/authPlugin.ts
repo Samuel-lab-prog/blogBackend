@@ -7,7 +7,6 @@ export const authPlugin = new Elysia()
   .use(SetupPlugin)
 
   .onBeforeHandle({ as: 'scoped' }, async ({ cookie, store }) => {
-    console.log('AuthPlugin: onBeforeHandle triggered' + JSON.stringify(cookie));
     // Bypass auth in test environment
     if (process.env.NODE_ENV === 'test') {
       store.role = 'admin';

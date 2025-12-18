@@ -45,13 +45,16 @@ export default new Elysia(ELYSIA_SETTINGS)
   .use(
     rateLimit({
       max: 1000,
-      duration: 15 * 60 * 1000, // 15 minutes
+      duration: 15 * 60 * 1000,
+      skip: () => process.env.NODE_ENV === 'test',
     })
   )
-  .use(cors({
-    credentials: true,
-    origin: 'http://localhost:5173',
-  }))
+  .use(
+    cors({
+      credentials: true,
+      origin: 'http://localhost:5173',
+    })
+  )
   .use(authRouter)
   .use(postsRouter)
   .use(openapi(OPEN_API_SETTINGS))

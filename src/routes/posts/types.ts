@@ -34,12 +34,6 @@ export const postPreviewSelect = {
 };
 export type PostPreviewRow = Prisma.PostGetPayload<{ select: typeof postPreviewSelect }>;
 
-export type Filter = {
-  selectBy: PostUniqueKey | 'all';
-  deleted?: 'exclude' | 'only';
-  status?: 'published' | 'draft';
-};
-
 type Without<T, U> = {
   [P in Exclude<keyof T, keyof U>]?: never;
 };
@@ -47,3 +41,17 @@ type Without<T, U> = {
 type XOR<T, U> = (T & Without<U, T>) | (U & Without<T, U>);
 
 export type PostUniqueKey = XOR<{ id: number }, { slug: string }>;
+
+export type Filter = {
+  selectBy: PostUniqueKey | 'all';
+  deleted?: 'exclude' | 'only';
+  status?: 'published' | 'draft';
+  tag?: string;
+};
+
+export type SearchOptions = {
+  cursor?: number;
+  limit?: number;
+};
+
+export const defaultTakeCount = 10;

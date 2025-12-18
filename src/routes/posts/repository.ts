@@ -10,7 +10,7 @@ export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
     })
   );
 }
-
+// No need for pagination here as this will be used only in admin interfaces
 export async function selectPosts(filter: t.Filter): Promise<t.FullPost[]> {
   return withPrismaErrorHandling<t.FullPost[]>(() =>
     prisma.post.findMany({
@@ -19,6 +19,13 @@ export async function selectPosts(filter: t.Filter): Promise<t.FullPost[]> {
         ...(filter.deleted === 'exclude' && { deletedAt: null }),
         ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
         ...(filter.status && { status: filter.status }),
+        ...(filter.tag && {
+          tags: {
+            some: {
+              name: filter.tag,
+            },
+          },
+        }),
       },
       include: t.fullPostRowInclude,
       orderBy: { createdAt: 'desc' },
@@ -28,15 +35,14 @@ export async function selectPosts(filter: t.Filter): Promise<t.FullPost[]> {
 
 export async function selectPostsPreviews(
   filter: t.Filter,
-  filterTag?: string,
-  cursor: number | null = null,
-  limit?: number
+  searchOptions: t.SearchOptions = {}
 ): Promise<{
   items: t.PostPreview[];
   nextCursor?: number;
   hasMore: boolean;
 }> {
-  const takeCount = 10;
+  const limit = searchOptions.limit ?? t.defaultTakeCount;
+  const cursor = searchOptions.cursor ?? undefined;
 
   const posts = await withPrismaErrorHandling<t.PostPreview[]>(() =>
     prisma.post.findMany({
@@ -45,17 +51,17 @@ export async function selectPostsPreviews(
         ...(filter.deleted === 'exclude' && { deletedAt: null }),
         ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
         ...(filter.status && { status: filter.status }),
-        ...(filterTag && {
+        ...(filter.tag && {
           tags: {
             some: {
-              name: filterTag,
+              name: filter.tag,
             },
           },
         }),
       },
       select: t.postPreviewSelect,
       orderBy: { id: 'desc' },
-      take: limit ? limit + 1 : takeCount + 1,
+      take: limit + 1, // To check if there's more
       ...(cursor && {
         cursor: { id: cursor },
         skip: 1,
@@ -63,7 +69,7 @@ export async function selectPostsPreviews(
     })
   );
 
-  const hasMore = posts.length > (limit ?? takeCount);
+  const hasMore = posts.length > limit;
   if (hasMore) posts.pop();
 
   return {
