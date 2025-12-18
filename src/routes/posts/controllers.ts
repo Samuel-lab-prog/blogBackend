@@ -13,7 +13,8 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     async ({ query }) => {
       return await services.fetchAllPostsPreviews(
         query.cursor ?? undefined,
-        query.tag ?? undefined
+        query.tag ?? undefined,
+        query.limit ?? undefined
       );
     },
     {
@@ -28,6 +29,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       query: t.Object({
         cursor: t.Optional(idSchema),
         tag: t.Optional(t.String()),
+        limit: t.Optional(t.Number()),
       }),
       detail: {
         summary: 'Get all previews',
@@ -36,13 +38,13 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     }
   )
   .get(
-    '/:id',
+    '/:slug',
     async ({ params }) => {
       return services.fetchPost(params);
     },
     {
       params: t.Object({
-        id: idSchema,
+        slug: t.String(),
       }),
       response: {
         200: schemas.fullPostSchema,

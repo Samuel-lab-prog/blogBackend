@@ -48,8 +48,11 @@ export default new Elysia(ELYSIA_SETTINGS)
       duration: 15 * 60 * 1000, // 15 minutes
     })
   )
-  .use(cors())
-  .use(postsRouter)
+  .use(cors({
+    credentials: true,
+    origin: 'http://localhost:5173',
+  }))
   .use(authRouter)
+  .use(postsRouter)
   .use(openapi(OPEN_API_SETTINGS))
   .listen({ hostname: HOST_NAME, port: PORT });

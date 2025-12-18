@@ -29,7 +29,8 @@ export async function selectPosts(filter: t.Filter): Promise<t.FullPost[]> {
 export async function selectPostsPreviews(
   filter: t.Filter,
   filterTag?: string,
-  cursor: number | null = null
+  cursor: number | null = null,
+  limit?: number
 ): Promise<{
   items: t.PostPreview[];
   nextCursor?: number;
@@ -54,7 +55,7 @@ export async function selectPostsPreviews(
       },
       select: t.postPreviewSelect,
       orderBy: { id: 'desc' },
-      take: takeCount + 1,
+      take: limit ? limit + 1 : takeCount + 1,
       ...(cursor && {
         cursor: { id: cursor },
         skip: 1,
@@ -62,7 +63,7 @@ export async function selectPostsPreviews(
     })
   );
 
-  const hasMore = posts.length > takeCount;
+  const hasMore = posts.length > (limit ?? takeCount);
   if (hasMore) posts.pop();
 
   return {

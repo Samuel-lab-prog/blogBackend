@@ -152,10 +152,10 @@ describe('Post controllers tests', () => {
     expect(body.hasMore).toBe(false);
   });
 
-  it('GET /posts/:id -> should return a published post', async () => {
+  it('GET /posts/:slug -> should return a published post', async () => {
     const post = await createPost();
 
-    const resp = await createApp().handle(new Request(`${PREFIX}/${post.id}`));
+    const resp = await createApp().handle(new Request(`${PREFIX}/${post.slug}`));
     const body = (await resp.json()) as t.FullPost;
 
     expect(resp.status).toBe(200);
@@ -163,7 +163,7 @@ describe('Post controllers tests', () => {
     expect(body.title).toBe(post.title);
   });
 
-  it('GET /posts/:id -> should return 404 when post is deleted', async () => {
+  it('GET /posts/:slug -> should return 404 when post is deleted', async () => {
     const post = await createPost();
 
     await prisma.post.update({
@@ -171,13 +171,13 @@ describe('Post controllers tests', () => {
       data: { deletedAt: new Date() },
     });
 
-    const resp = await createApp().handle(new Request(`${PREFIX}/${post.id}`));
+    const resp = await createApp().handle(new Request(`${PREFIX}/${post.slug}`));
 
     expect(resp.status).toBe(404);
   });
 
-  it('GET /posts/:id -> should return 404 when post does not exist', async () => {
-    const resp = await createApp().handle(new Request(`${PREFIX}/999999`));
+  it('GET /posts/:slug -> should return 404 when post does not exist', async () => {
+    const resp = await createApp().handle(new Request(`${PREFIX}/nonexistent-slug`));
 
     expect(resp.status).toBe(404);
   });

@@ -3,6 +3,7 @@ import { appErrorSchema } from '../../utils/AppError.ts';
 import { loginSchema } from '../../utils/schemas.ts';
 import { login } from '../auth/services.ts';
 import { SetupPlugin } from '../../utils/plugins/setupPlugin.ts';
+import { log } from '../../utils/logger.ts';
 
 export const authRouter = new Elysia().group('/auth', (app) =>
   app.use(SetupPlugin).post(
@@ -15,7 +16,9 @@ export const authRouter = new Elysia().group('/auth', (app) =>
       cookie.token!.value = result.token;
       cookie.token!.httpOnly = true;
       cookie.token!.path = '/';
+      cookie.token!.maxAge = 60 * 60 * 24 * 7; // 7 days
 
+      log.debug('Cookie successfully set for login route');
       set.status = 204;
 
       store.userId = result.data.id;

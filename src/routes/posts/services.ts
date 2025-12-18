@@ -40,12 +40,14 @@ export async function fetchPost(identifier: t.PostUniqueKey): Promise<t.FullPost
 
 export async function fetchAllPostsPreviews(
   cursor?: number,
-  tag?: string
+  tag?: string,
+  limit?: number
 ): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean }> {
   return await r.selectPostsPreviews(
     { selectBy: 'all', deleted: 'exclude', status: 'published' },
     tag,
-    cursor
+    cursor,
+    limit
   );
 }
 
