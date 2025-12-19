@@ -1,26 +1,39 @@
 import * as s from './schemas';
 import type { Prisma } from '../../prisma/generated/browser';
-import type { PostCreateInput, PostUpdateInput } from '../../prisma/generated/models';
+import type {
+  PostCreateInput,
+  PostUpdateInput,
+} from '../../prisma/generated/models';
 
 export type PostNewPost = (typeof s.postNewPost)['static'];
 export type PatchPost = (typeof s.patchPost)['static'];
 export type FullPost = (typeof s.fullPostSchema)['static'];
 export type PaginatedPosts = (typeof s.paginatedPostsSchema)['static'];
 export type PostPreview = (typeof s.postPreviewSchema)['static'];
-export type PostStatus = (typeof s.fullPostSchema.properties.status)['static'];
-export type Tag = (typeof s.fullPostSchema.properties.tags.items)['static'];
+export type PostStatus =
+  (typeof s.fullPostSchema.properties.status)['static'];
+export type Tag =
+  (typeof s.fullPostSchema.properties.tags.items)['static'];
+
+export type OrderBy = (typeof s.orderBySchema)['static'];
+export type OrderDirection =
+  (typeof s.orderDirectionSchema)['static'];
+
 export type InsertPost = PostCreateInput;
 export type UpdatePost = PostUpdateInput;
 
 export const fullPostRowInclude = {
   tags: {
     select: {
-      name: true,
       id: true,
+      name: true,
     },
   },
 };
-export type PostFullRow = Prisma.PostGetPayload<{ include: typeof fullPostRowInclude }>;
+
+export type PostFullRow = Prisma.PostGetPayload<{
+  include: typeof fullPostRowInclude;
+}>;
 
 // We are not sending content in previews for performance reasons
 export const postPreviewSelect = {
@@ -30,9 +43,17 @@ export const postPreviewSelect = {
   excerpt: true,
   createdAt: true,
   updatedAt: true,
-  tags: { select: { name: true, id: true } },
+  tags: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
 };
-export type PostPreviewRow = Prisma.PostGetPayload<{ select: typeof postPreviewSelect }>;
+
+export type PostPreviewRow = Prisma.PostGetPayload<{
+  select: typeof postPreviewSelect;
+}>;
 
 type Without<T, U> = {
   [P in Exclude<keyof T, keyof U>]?: never;
@@ -40,7 +61,8 @@ type Without<T, U> = {
 
 type XOR<T, U> = (T & Without<U, T>) | (U & Without<T, U>);
 
-export type PostUniqueKey = XOR<{ id: number }, { slug: string }>;
+export type PostUniqueKey =
+  | XOR<{ id: number }, { slug: string }>;
 
 export type Filter = {
   selectBy: PostUniqueKey | 'all';
@@ -51,8 +73,10 @@ export type Filter = {
 
 export type SearchOptions = {
   cursor?: number;
-  limit?: number;
   offset?: number;
+  limit?: number;
+  orderBy?: OrderBy;
+  orderDirection?: OrderDirection;
 };
 
 export const defaultTakeCount = 10;

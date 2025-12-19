@@ -54,3 +54,10 @@ export const postPreviewSchema = t.Object({
   updatedAt: s.dateSchema,
   createdAt: s.dateSchema,
 });
+
+export const orderDirectionSchema = t.Union([t.Literal('asc'), t.Literal('desc')]);
+export const orderBySchema = t.Union([
+  t.Literal('createdAt'),
+  t.Literal('updatedAt'),
+  t.Literal('id'),
+]);

@@ -43,6 +43,8 @@ export async function selectPostsPreviews(
 }> {
   const limit = searchOptions.limit ?? t.defaultTakeCount;
   const cursor = searchOptions.cursor ?? undefined;
+  const orderBy = searchOptions.orderBy ?? 'createdAt';
+  const orderDirection = searchOptions.orderDirection ?? 'desc';
 
   const posts = await withPrismaErrorHandling<t.PostPreview[]>(() =>
     prisma.post.findMany({
@@ -60,12 +62,12 @@ export async function selectPostsPreviews(
         }),
       },
       select: t.postPreviewSelect,
-      orderBy: { id: 'desc' },
       take: limit + 1, // To check if there's more
       ...(cursor && {
         cursor: { id: cursor },
         skip: 1,
       }),
+      orderBy: { [orderBy]: orderDirection },
     })
   );
 

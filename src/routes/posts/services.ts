@@ -38,14 +38,12 @@ export async function fetchPost(identifier: t.PostUniqueKey): Promise<t.FullPost
   return posts[0];
 }
 
-export async function fetchAllPostsPreviews(
-  cursor?: number,
-  tag?: string,
-  limit?: number
+export async function fetchAllPostsPreviews(filter: {tag?: string}, searchOptions: t.SearchOptions
+  
 ): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean }> {
   return await r.selectPostsPreviews(
-    { selectBy: 'all', deleted: 'exclude', status: 'published', tag },
-    { cursor, limit }
+    { selectBy: 'all', deleted: 'exclude', status: 'published', tag: filter.tag },
+    { cursor: searchOptions.cursor, limit: searchOptions.limit, orderBy: searchOptions.orderBy, orderDirection: searchOptions.orderDirection }
   );
 }
 

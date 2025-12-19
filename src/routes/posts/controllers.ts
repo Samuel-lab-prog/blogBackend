@@ -11,11 +11,16 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/',
     async ({ query }) => {
-      return await services.fetchAllPostsPreviews(
-        query.cursor ?? undefined,
-        query.tag ?? undefined,
-        query.limit ?? undefined
-      );
+      const filter = {
+        tag: query.tag
+      };
+      const searchOptions = {
+        cursor: query.cursor ?? undefined,
+        limit: query.limit ?? undefined,
+        orderBy: query.orderBy ?? undefined,
+        orderDirection: query.orderDirection ?? undefined,
+      };
+      return await services.fetchAllPostsPreviews(filter, searchOptions);
     },
     {
       response: {
@@ -30,6 +35,8 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         cursor: t.Optional(idSchema),
         tag: t.Optional(t.String()),
         limit: t.Optional(t.Number()),
+        orderBy: t.Optional(schemas.orderBySchema),
+        orderDirection: t.Optional(schemas.orderDirectionSchema),
       }),
       detail: {
         summary: 'Get all previews',
