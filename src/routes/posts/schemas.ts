@@ -2,11 +2,13 @@ import { t } from 'elysia';
 import * as s from '../../utils/schemas.ts';
 import { makeValidationError } from '../../utils/AppError.ts';
 
+export const tagSchema = s.tagSchema;
+
 export const postNewPost = t.Object({
   title: s.titleSchema,
   excerpt: s.excerptSchema,
   content: s.contentSchema,
-  tags: t.Optional(t.Array(s.tagSchema)),
+  tags: t.Optional(t.Array(s.tagNameSchema)),
   status: t.Optional(s.postStatusSchema),
 });
 
@@ -28,7 +30,7 @@ export const fullPostSchema = t.Object({
   slug: s.slugSchema,
   content: s.contentSchema,
   excerpt: s.excerptSchema,
-  tags: s.tagsSchema,
+  tags: t.Array(s.tagSchema),
   status: s.postStatusSchema,
 
   id: s.idSchema,
@@ -46,7 +48,7 @@ export const postPreviewSchema = t.Object({
   title: s.titleSchema,
   slug: s.slugSchema,
   excerpt: s.excerptSchema,
-  tags: s.tagsSchema,
+  tags: t.Array(s.tagSchema),
 
   id: s.idSchema,
   updatedAt: s.dateSchema,

@@ -67,25 +67,23 @@ export const excerptSchema = t.String({
   ...makeValidationError('Excerpt must be between 10 and 200 characters'),
 });
 
-export const tagSchema = t.String({
+export const tagNameSchema = t.String({
   minLength: 3,
   maxLength: 50,
   example: 'Technology',
   ...makeValidationError('Each tag must be between 3 and 50 characters'),
 });
 
-export const tagsSchema = t.Array(
+export const tagSchema = 
   t.Object({
-    name: tagSchema,
+    name: tagNameSchema,
     id: idSchema,
-  }),
-  {
-    minItems: 0,
-    maxItems: 5,
-    example: [
-      { name: 'Technology', id: 1 },
-      { name: 'Programming', id: 2 },
-    ],
-    ...makeValidationError('Tags must be an array with 0 to 5 items'),
   }
 );
+
+export const tagsSchema = t.Array(tagSchema, {
+  minItems: 1,
+  maxItems: 5,
+  example: [{ id: 1, name: 'Technology' }, { id: 2, name: 'Programming' }],
+  ...makeValidationError('Tags must be an array with 1 to 5 tag objects'),
+});

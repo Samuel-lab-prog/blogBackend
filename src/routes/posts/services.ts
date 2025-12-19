@@ -96,3 +96,7 @@ export async function modifyPostStatus(
 ): Promise<{ id: number }> {
   return await r.updatePost(identifier, { status });
 }
+
+export async function fetchTags(): Promise<t.Tag[]> {
+  return await r.selectTags();
+}

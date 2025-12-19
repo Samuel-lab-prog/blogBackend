@@ -52,6 +52,7 @@ export type Filter = {
 export type SearchOptions = {
   cursor?: number;
   limit?: number;
+  offset?: number;
 };
 
 export const defaultTakeCount = 10;

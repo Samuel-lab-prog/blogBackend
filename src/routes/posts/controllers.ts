@@ -57,6 +57,18 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       },
     }
   )
+  .get('/tags', async () => {
+    return await services.fetchTags();
+  }, {
+    response: {
+      200: t.Array(schemas.tagSchema),
+      500: appErrorSchema,
+    },
+    detail: {
+      summary: 'Get all post tags',
+      tags: ['Posts'],
+    },
+  })
   .use(authPlugin)
   .post(
     '/',
