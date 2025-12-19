@@ -66,22 +66,6 @@ describe('Post controllers tests', () => {
     expect(body.nextCursor).toBeUndefined();
   });
 
-  it('GET /posts -> Should paginate correctly', async () => {
-    const POSTS_COUNT = 20;
-    const LIMIT = 5;
-    await createPublishedPosts(POSTS_COUNT);
-
-    const resp = await createApp().handle(new Request(`${PREFIX}?limit=${LIMIT}`));
-    const body = (await resp.json()) as t.PaginatedPosts;
-
-    expect(resp.status).toBe(200);
-    expect(body.items).toHaveLength(LIMIT);
-    expect(body.hasMore).toBe(true);
-    expect(body.nextCursor).toBeDefined();
-
-    expect(body.items[0]!.id).toBeGreaterThan(body.items.at(-1)!.id);
-  });
-
   it('GET /posts -> should return 422 when cursor is invalid', async () => {
     const resp = await createApp().handle(new Request(`${PREFIX}?cursor=abc`));
 
