@@ -81,13 +81,27 @@ export async function selectPostsPreviews(
   };
 }
 
-export function selectTags(): Promise<t.Tag[]> {
+export function selectTags(tagFilter?: t.TagFilter): Promise<t.Tag[]> {
+  const nameContains = tagFilter?.nameContains ?? undefined;
+  const includeFromDrafts = tagFilter?.includeFromDrafts ?? false;
+  const includeFromDeleted = tagFilter?.includeFromDeleted ?? false;
+
   return withPrismaErrorHandling<t.Tag[]>(() =>
     prisma.tag.findMany({
       orderBy: { name: 'asc' },
+      where: {
+        ...(nameContains && { name: { contains: nameContains, mode: 'insensitive' } }),
+        posts: {
+          some: {
+            ...(includeFromDrafts === false && { status: 'published' }),
+            ...(includeFromDeleted === false && { deletedAt: null }),
+          },
+        },
+      },
     })
   );
 }
+
 
 export function updatePost(key: t.PostUniqueKey, data: t.UpdatePost): Promise<{ id: number }> {
   return withPrismaErrorHandling<{ id: number }>(() =>

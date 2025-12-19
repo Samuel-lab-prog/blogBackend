@@ -95,6 +95,6 @@ export async function modifyPostStatus(
   return await r.updatePost(identifier, { status });
 }
 
-export async function fetchTags(): Promise<t.Tag[]> {
-  return await r.selectTags();
+export async function fetchTags(filter?: t.TagFilter): Promise<t.Tag[]> {
+  return await r.selectTags(filter);
 }

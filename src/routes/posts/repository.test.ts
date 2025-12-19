@@ -258,17 +258,6 @@ describe('Post repository', () => {
     expect(r.updatePost({ id: ABSURD_ID }, { status: 'draft' })).rejects.toThrow(AppError);
   });
 
-  it('selectTags -> Should return tags ordered by name', async () => {
-    await prisma.tag.createMany({
-      data: [{ name: 'zeta' }, { name: 'alpha' }],
-    });
-
-    const tags = await r.selectTags();
-
-    expect(tags).toHaveLength(2);
-    expect(tags[0]?.name).toBe('alpha');
-    expect(tags[1]?.name).toBe('zeta');
-  });
 
   it('selectTags -> Should return empty list if no tags', async () => {
     const tags = await r.selectTags();

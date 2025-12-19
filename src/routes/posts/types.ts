@@ -71,6 +71,11 @@ export type Filter = {
   tag?: string;
 };
 
+export type TagFilter = {
+  nameContains?: string;
+  includeFromDrafts?: boolean;
+  includeFromDeleted?: boolean;
+};
 export type SearchOptions = {
   cursor?: number;
   offset?: number;

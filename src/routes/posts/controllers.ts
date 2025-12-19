@@ -64,13 +64,24 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       },
     }
   )
-  .get('/tags', async () => {
-    return await services.fetchTags();
+  .get('/tags', async ({ query }) => {
+    console.log('Fetching tags with params:', query);
+    const filter = {
+      nameContains: query.nameContains,
+      includeFromDeleted: query.deleted,
+      includeFromDrafts: query.draft,
+    };
+    return await services.fetchTags(filter);
   }, {
     response: {
       200: t.Array(schemas.tagSchema),
       500: appErrorSchema,
     },
+    query: t.Object({
+      deleted: t.Optional(t.Boolean()), // Using string to capture query params
+      draft: t.Optional(t.Boolean()),
+      nameContains: t.Optional(t.String()),
+    }),
     detail: {
       summary: 'Get all post tags',
       tags: ['Posts'],
