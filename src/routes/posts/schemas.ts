@@ -37,6 +37,10 @@ export const fullPostSchema = t.Object({
   createdAt: s.dateSchema,
   updatedAt: s.dateSchema,
 });
+export const postMinimalSchema = t.Object({
+  id: s.idSchema,
+  title: s.titleSchema,
+});
 
 export const paginatedPostsSchema = t.Object({
   items: t.Array(fullPostSchema),

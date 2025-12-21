@@ -7,7 +7,8 @@ import { log } from '../../utils/logger.ts';
 import { authPlugin } from '../../utils/plugins/authPlugin.ts';
 
 export const authRouter = new Elysia().group('/auth', (app) =>
-  app.use(SetupPlugin)
+  app
+    .use(SetupPlugin)
     .post(
       '/login',
       async ({ body, cookie, set, store }) => {
@@ -46,10 +47,13 @@ export const authRouter = new Elysia().group('/auth', (app) =>
       }
     )
     .use(authPlugin)
-    .post('', ({ set }) => { // Dummy route to apply authPlugin
-      set.status = 204;
-      return;
-    },
+    .post(
+      '',
+      ({ set }) => {
+        // Dummy route to apply authPlugin
+        set.status = 204;
+        return;
+      },
       {
         response: {
           204: t.Void(),
@@ -61,5 +65,6 @@ export const authRouter = new Elysia().group('/auth', (app) =>
           description: 'A dummy protected route to verify authentication.',
           tags: ['Auth'],
         },
-      })
+      }
+    )
 );

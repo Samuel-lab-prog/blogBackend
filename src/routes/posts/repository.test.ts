@@ -258,7 +258,6 @@ describe('Post repository', () => {
     expect(r.updatePost({ id: ABSURD_ID }, { status: 'draft' })).rejects.toThrow(AppError);
   });
 
-
   it('selectTags -> Should return empty list if no tags', async () => {
     const tags = await r.selectTags();
     expect(tags).toHaveLength(0);

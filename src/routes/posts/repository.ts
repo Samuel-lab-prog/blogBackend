@@ -33,6 +33,28 @@ export async function selectPosts(filter: t.Filter): Promise<t.FullPost[]> {
   );
 }
 
+export async function selectPostsMinimalData(filter: t.Filter): Promise<t.PostMinimalData[]> {
+  return withPrismaErrorHandling<t.PostMinimalData[]>(() =>
+    prisma.post.findMany({
+      where: {
+        ...(filter.selectBy !== 'all' && filter.selectBy),
+        ...(filter.deleted === 'exclude' && { deletedAt: null }),
+        ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
+        ...(filter.status && { status: filter.status }),
+        ...(filter.tag && {
+          tags: {
+            some: {
+              name: filter.tag,
+            },
+          },
+        }),
+      },
+      select: t.postMinimalSelect,
+      orderBy: { createdAt: 'desc' },
+    })
+  );
+}
+
 export async function selectPostsPreviews(
   filter: t.Filter,
   searchOptions: t.SearchOptions = {}
@@ -101,7 +123,6 @@ export function selectTags(tagFilter?: t.TagFilter): Promise<t.Tag[]> {
     })
   );
 }
-
 
 export function updatePost(key: t.PostUniqueKey, data: t.UpdatePost): Promise<{ id: number }> {
   return withPrismaErrorHandling<{ id: number }>(() =>

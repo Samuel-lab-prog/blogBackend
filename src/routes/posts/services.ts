@@ -38,12 +38,18 @@ export async function fetchPost(identifier: t.PostUniqueKey): Promise<t.FullPost
   return posts[0];
 }
 
-export async function fetchAllPostsPreviews(filter: {tag?: string}, searchOptions: t.SearchOptions
-  
+export async function fetchAllPostsPreviews(
+  filter: { tag?: string },
+  searchOptions: t.SearchOptions
 ): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean }> {
   return await r.selectPostsPreviews(
     { selectBy: 'all', deleted: 'exclude', status: 'published', tag: filter.tag },
-    { cursor: searchOptions.cursor, limit: searchOptions.limit, orderBy: searchOptions.orderBy, orderDirection: searchOptions.orderDirection }
+    {
+      cursor: searchOptions.cursor,
+      limit: searchOptions.limit,
+      orderBy: searchOptions.orderBy,
+      orderDirection: searchOptions.orderDirection,
+    }
   );
 }
 
@@ -82,6 +88,10 @@ export async function modifyPost(
 
 export async function fetchAllDeletedPosts(): Promise<t.FullPost[]> {
   return await r.selectPosts({ selectBy: 'all', deleted: 'only' });
+}
+
+export async function fetchPostsMinimalData(): Promise<t.PostMinimalData[]> {
+  return await r.selectPostsMinimalData({ selectBy: 'all', deleted: 'exclude' });
 }
 
 export async function restoreDeletedPost(identifier: t.PostUniqueKey): Promise<{ id: number }> {
