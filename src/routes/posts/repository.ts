@@ -1,4 +1,4 @@
-import { prisma, type PostWhereInput, type PostSelect, } from '@prisma';
+import { prisma, type PostWhereInput, type PostSelect } from '@prisma';
 import { withPrismaErrorHandling } from '@utils';
 import * as t from './types.ts';
 
@@ -19,7 +19,6 @@ export async function selectPosts<T extends keyof t.PostDataType>(
   nextCursor?: number;
   hasMore: boolean;
 }> {
-
   const { cursor, limit, orderBy, orderDirection } = normalizeSearchOptions(options.searchOptions);
   const where = buildPostsWhereClause(options.filter);
 
@@ -69,7 +68,6 @@ export async function updatePost(
   key: t.PostUniqueKey,
   data: t.UpdatePost
 ): Promise<{ id: number }> {
-
   return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.update({
       where: {
@@ -79,7 +77,6 @@ export async function updatePost(
       select: { id: true },
     })
   );
-
 }
 
 function buildPostsWhereClause(filter: t.SelectPostsFilter = {}): PostWhereInput {

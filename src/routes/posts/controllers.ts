@@ -18,10 +18,12 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     async ({ query }) => {
       const { cursor, limit, orderBy, orderDirection, ...filter } = query;
 
-      return services.fetchAllVisiblePostsPreviews(
-        filter,
-        { cursor, limit, orderBy, orderDirection }
-      );
+      return services.fetchAllVisiblePostsPreviews(filter, {
+        cursor,
+        limit,
+        orderBy,
+        orderDirection,
+      });
     },
     {
       query: t.Object({
@@ -214,10 +216,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .patch(
     '/:id/status',
     async ({ params, body }) => {
-      return services.modifyPostStatus(
-        parsePostKey(params.id),
-        body.status
-      );
+      return services.modifyPostStatus(parsePostKey(params.id), body.status);
     },
     {
       params: t.Object({

@@ -48,9 +48,7 @@ describe('Post repository', () => {
   it('insertPost -> should throw on duplicated slug', async () => {
     r.insertPost(DEFAULT_POST);
 
-    await expect(
-      r.insertPost(DEFAULT_POST)
-    ).rejects.toThrow(AppError);
+    await expect(r.insertPost(DEFAULT_POST)).rejects.toThrow(AppError);
   });
 
   it('selectPosts -> should return empty array if no match', async () => {

@@ -5,9 +5,7 @@ import slugify from 'slugify';
 
 /* ----------------------------- CREATE ----------------------------- */
 
-export async function registerPost(
-  body: t.PostNewPost
-): Promise<{ id: number }> {
+export async function registerPost(body: t.PostNewPost): Promise<{ id: number }> {
   const slug = slugify(body.title, { lower: true, strict: true });
   const { tags, ...postData } = body;
 
@@ -32,9 +30,7 @@ export async function registerPost(
 
 /* ----------------------------- READ ------------------------------ */
 
-export async function fetchPost(
-  key: t.PostUniqueKey
-): Promise<t.FullPost> {
+export async function fetchPost(key: t.PostUniqueKey): Promise<t.FullPost> {
   const { posts } = await r.selectPosts({
     filter: { selectBy: key },
     dataType: 'full',
@@ -99,22 +95,15 @@ export async function fetchAllDeletedPosts(): Promise<t.FullPost[]> {
 
 /* ----------------------------- UPDATE ----------------------------- */
 
-export async function softRemovePost(
-  key: t.PostUniqueKey
-): Promise<{ id: number }> {
+export async function softRemovePost(key: t.PostUniqueKey): Promise<{ id: number }> {
   return r.updatePost(key, { deletedAt: new Date() });
 }
 
-export async function restoreDeletedPost(
-  key: t.PostUniqueKey
-): Promise<{ id: number }> {
+export async function restoreDeletedPost(key: t.PostUniqueKey): Promise<{ id: number }> {
   return r.updatePost(key, { deletedAt: null });
 }
 
-export async function modifyPost(
-  key: t.PostUniqueKey,
-  data: t.PatchPost
-): Promise<{ id: number }> {
+export async function modifyPost(key: t.PostUniqueKey, data: t.PatchPost): Promise<{ id: number }> {
   const prismaData: Partial<t.UpdatePost> = {};
 
   if (data.title) {
@@ -131,9 +120,8 @@ export async function modifyPost(
   if (data.tags) {
     const normalizedTags = [
       ...new Set(
-        data.tags.map((tag) =>
-          tag.trim().charAt(0).toUpperCase() +
-          tag.trim().slice(1).toLowerCase()
+        data.tags.map(
+          (tag) => tag.trim().charAt(0).toUpperCase() + tag.trim().slice(1).toLowerCase()
         )
       ),
     ];
@@ -159,8 +147,6 @@ export async function modifyPostStatus(
 
 /* ----------------------------- TAGS ------------------------------ */
 
-export async function fetchTags(
-  filter?: t.TagFilter
-): Promise<t.TagType[]> {
+export async function fetchTags(filter?: t.TagFilter): Promise<t.TagType[]> {
   return r.selectTags(filter);
 }

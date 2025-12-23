@@ -9,15 +9,11 @@ export type FullPost = (typeof s.fullPostSchema)['static'];
 export type PostPreview = (typeof s.postPreviewSchema)['static'];
 export type PostMinimalData = (typeof s.postMinimalSchema)['static'];
 
-export type PaginatedFullPosts =
-  (typeof s.paginatedPostsFullSchema)['static'];
+export type PaginatedFullPosts = (typeof s.paginatedPostsFullSchema)['static'];
 
-export type PostStatus =
-  (typeof s.fullPostSchema.properties.status)['static'];
+export type PostStatus = (typeof s.fullPostSchema.properties.status)['static'];
 
-export type TagType =
-  (typeof s.fullPostSchema.properties.tags.items)['static'];
-
+export type TagType = (typeof s.fullPostSchema.properties.tags.items)['static'];
 
 // Ordering & pagination
 export type OrderBy = (typeof s.orderBySchema)['static'];
@@ -81,12 +77,8 @@ export type PostPreviewRow = Prisma.PostGetPayload<{
   select: typeof postPreviewSelect;
 }>;
 
-
 // Domain identifiers
-export type PostUniqueKey =
-  | { type: 'id'; id: number }
-  | { type: 'slug'; slug: string };
-
+export type PostUniqueKey = { type: 'id'; id: number } | { type: 'slug'; slug: string };
 
 // Domain filters
 export type SelectPostsFilter = {
@@ -101,7 +93,6 @@ export type TagFilter = {
   includeFromDrafts?: boolean;
   includeFromDeleted?: boolean;
 };
-
 
 // High-level options
 export type SelectPostsOptions = {
@@ -118,5 +109,5 @@ export type PostDataType = {
 
 export type NormalizedPostsSearchOptions = Required<
   Pick<PostSearchOptions, 'limit' | 'orderBy' | 'orderDirection'>
-> & Pick<PostSearchOptions, 'cursor'>;
-
+> &
+  Pick<PostSearchOptions, 'cursor'>;
