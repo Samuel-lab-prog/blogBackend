@@ -1,5 +1,5 @@
 import Elysia from 'elysia';
-import { throwUnauthorizedError } from './../AppError';
+import { throwUnauthorizedError } from '@utils';
 import { authenticate } from '../../routes/auth/services';
 import { SetupPlugin } from './setupPlugin';
 

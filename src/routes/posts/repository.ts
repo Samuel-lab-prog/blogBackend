@@ -1,5 +1,5 @@
-import { prisma } from '../../prisma/client.ts';
-import { withPrismaErrorHandling } from '../../utils/AppError.ts';
+import { prisma, type PostWhereInput, type PostSelect, } from '@prisma';
+import { withPrismaErrorHandling } from '@utils';
 import * as t from './types.ts';
 
 export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
@@ -10,86 +10,26 @@ export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
     })
   );
 }
-// No need for pagination here as this will be used only in admin interfaces
-export async function selectPosts(filter: t.Filter): Promise<t.FullPost[]> {
-  return withPrismaErrorHandling<t.FullPost[]>(() =>
-    prisma.post.findMany({
-      where: {
-        ...(filter.selectBy !== 'all' && filter.selectBy),
-        ...(filter.deleted === 'exclude' && { deletedAt: null }),
-        ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
-        ...(filter.status && { status: filter.status }),
-        ...(filter.tag && {
-          tags: {
-            some: {
-              name: filter.tag,
-            },
-          },
-        }),
-      },
-      include: t.fullPostRowInclude,
-      orderBy: { createdAt: 'desc' },
-    })
-  );
-}
 
-export async function selectPostsMinimalData(filter: t.Filter): Promise<t.PostMinimalData[]> {
-  return withPrismaErrorHandling<t.PostMinimalData[]>(() =>
-    prisma.post.findMany({
-      where: {
-        ...(filter.selectBy !== 'all' && filter.selectBy),
-        ...(filter.deleted === 'exclude' && { deletedAt: null }),
-        ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
-        ...(filter.status && { status: filter.status }),
-        ...(filter.tag && {
-          tags: {
-            some: {
-              name: filter.tag,
-            },
-          },
-        }),
-      },
-      select: t.postMinimalSelect,
-      orderBy: { createdAt: 'desc' },
-    })
-  );
-}
-
-export async function selectPostsPreviews(
-  filter: t.Filter,
-  searchOptions: t.SearchOptions = {}
+// You don't need to explicitly pass the T parameter, TS will infer it from the options
+export async function selectPosts<T extends keyof t.PostDataType>(
+  options: t.SelectPostsOptions & { dataType: T }
 ): Promise<{
-  items: t.PostPreview[];
+  posts: t.PostDataType[T][];
   nextCursor?: number;
   hasMore: boolean;
 }> {
-  const limit = searchOptions.limit ?? t.defaultTakeCount;
-  const cursor = searchOptions.cursor ?? undefined;
-  const orderBy = searchOptions.orderBy ?? 'createdAt';
-  const orderDirection = searchOptions.orderDirection ?? 'desc';
 
-  const posts = await withPrismaErrorHandling<t.PostPreview[]>(() =>
+  const { cursor, limit, orderBy, orderDirection } = normalizeSearchOptions(options.searchOptions);
+  const where = buildPostsWhereClause(options.filter);
+
+  const posts = await withPrismaErrorHandling(() =>
     prisma.post.findMany({
-      where: {
-        ...(filter.selectBy !== 'all' && filter.selectBy),
-        ...(filter.deleted === 'exclude' && { deletedAt: null }),
-        ...(filter.deleted === 'only' && { deletedAt: { not: null } }),
-        ...(filter.status && { status: filter.status }),
-        ...(filter.tag && {
-          tags: {
-            some: {
-              name: filter.tag,
-            },
-          },
-        }),
-      },
-      select: t.postPreviewSelect,
-      take: limit + 1, // To check if there's more
-      ...(cursor && {
-        cursor: { id: cursor },
-        skip: 1,
-      }),
+      where,
+      select: postSelectMap[options.dataType] as PostSelect, // Using alias here is necessary for TS to infer correctly
       orderBy: { [orderBy]: orderDirection },
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     })
   );
 
@@ -97,18 +37,19 @@ export async function selectPostsPreviews(
   if (hasMore) posts.pop();
 
   return {
-    items: posts,
+    posts,
     nextCursor: hasMore ? posts.at(-1)?.id : undefined,
     hasMore,
   };
 }
 
-export function selectTags(tagFilter?: t.TagFilter): Promise<t.Tag[]> {
+// Need to refactor this later
+export function selectTags(tagFilter?: t.TagFilter): Promise<t.TagType[]> {
   const nameContains = tagFilter?.nameContains ?? undefined;
   const includeFromDrafts = tagFilter?.includeFromDrafts ?? false;
   const includeFromDeleted = tagFilter?.includeFromDeleted ?? false;
 
-  return withPrismaErrorHandling<t.Tag[]>(() =>
+  return withPrismaErrorHandling<t.TagType[]>(() =>
     prisma.tag.findMany({
       orderBy: { name: 'asc' },
       where: {
@@ -124,12 +65,72 @@ export function selectTags(tagFilter?: t.TagFilter): Promise<t.Tag[]> {
   );
 }
 
-export function updatePost(key: t.PostUniqueKey, data: t.UpdatePost): Promise<{ id: number }> {
+export async function updatePost(
+  key: t.PostUniqueKey,
+  data: t.UpdatePost
+): Promise<{ id: number }> {
+
   return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.update({
-      where: key,
+      where: {
+        ...(key.type === 'id' ? { id: key.id } : { slug: key.slug }),
+      },
       data,
       select: { id: true },
     })
   );
+
+}
+
+function buildPostsWhereClause(filter: t.SelectPostsFilter = {}): PostWhereInput {
+  const where: PostWhereInput = {};
+
+  if (filter.selectBy) {
+    switch (filter.selectBy.type) {
+      case 'id':
+        where.id = filter.selectBy.id;
+        break;
+
+      case 'slug':
+        where.slug = filter.selectBy.slug;
+        break;
+    }
+  }
+
+  if (filter.deleted === 'exclude') {
+    where.deletedAt = null;
+  }
+
+  if (filter.deleted === 'only') {
+    where.deletedAt = { not: null };
+  }
+
+  if (filter.status) {
+    where.status = filter.status;
+  }
+
+  if (filter.tag) {
+    where.tags = {
+      some: {
+        name: filter.tag,
+      },
+    };
+  }
+
+  return where;
+}
+
+const postSelectMap = {
+  preview: t.postPreviewSelect,
+  minimal: t.postMinimalSelect,
+  full: t.fullPostSelect,
+} satisfies Record<keyof t.PostDataType, PostSelect>;
+
+function normalizeSearchOptions(options: t.PostSearchOptions = {}): t.NormalizedPostsSearchOptions {
+  return {
+    cursor: options.cursor,
+    limit: options.limit ?? 10,
+    orderBy: options.orderBy ?? 'createdAt',
+    orderDirection: options.orderDirection ?? 'desc',
+  };
 }

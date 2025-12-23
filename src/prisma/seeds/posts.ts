@@ -29,7 +29,6 @@ Here are some examples to illustrate the concept:
 
 \`\`\`js
 // Example code snippet
-console.log('Topic ${i} in action!');
 \`\`\`
 
 We hope this article provides valuable insights into Topic ${i}. Keep exploring and experimenting to gain even deeper knowledge.

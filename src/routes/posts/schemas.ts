@@ -1,23 +1,31 @@
 import { t } from 'elysia';
-import * as s from '../../utils/schemas.ts';
-import { makeValidationError } from '../../utils/AppError.ts';
-
-export const tagSchema = s.tagSchema;
+import {
+  titleSchema,
+  excerptSchema,
+  contentSchema,
+  tagNameSchema,
+  postStatusSchema,
+  idSchema,
+  slugSchema,
+  tagSchema,
+  dateSchema,
+  makeValidationError,
+} from '@utils';
 
 export const postNewPost = t.Object({
-  title: s.titleSchema,
-  excerpt: s.excerptSchema,
-  content: s.contentSchema,
-  tags: t.Optional(t.Array(s.tagNameSchema)),
-  status: t.Optional(s.postStatusSchema),
+  title: titleSchema,
+  excerpt: excerptSchema,
+  content: contentSchema,
+  tags: t.Optional(t.Array(tagNameSchema)),
+  status: t.Optional(postStatusSchema),
 });
 
 export const patchPost = t.Object(
   {
-    title: t.Optional(s.titleSchema),
-    excerpt: t.Optional(s.excerptSchema),
-    content: t.Optional(s.contentSchema),
-    tags: t.Optional(t.Array(s.idSchema)),
+    title: t.Optional(titleSchema),
+    excerpt: t.Optional(excerptSchema),
+    content: t.Optional(contentSchema),
+    tags: t.Optional(t.Array(tagNameSchema)),
   },
   {
     minProperties: 1,
@@ -26,37 +34,48 @@ export const patchPost = t.Object(
 );
 
 export const fullPostSchema = t.Object({
-  title: s.titleSchema,
-  slug: s.slugSchema,
-  content: s.contentSchema,
-  excerpt: s.excerptSchema,
-  tags: t.Array(s.tagSchema),
-  status: s.postStatusSchema,
-
-  id: s.idSchema,
-  createdAt: s.dateSchema,
-  updatedAt: s.dateSchema,
+  title: titleSchema,
+  slug: slugSchema,
+  content: contentSchema,
+  excerpt: excerptSchema,
+  tags: t.Array(tagSchema),
+  status: postStatusSchema,
+  id: idSchema,
+  createdAt: dateSchema,
+  updatedAt: dateSchema,
 });
 export const postMinimalSchema = t.Object({
-  id: s.idSchema,
-  title: s.titleSchema,
-});
-
-export const paginatedPostsSchema = t.Object({
-  items: t.Array(fullPostSchema),
-  nextCursor: t.Optional(s.idSchema),
-  hasMore: t.Boolean(),
+  id: idSchema,
+  title: titleSchema,
 });
 
 export const postPreviewSchema = t.Object({
-  title: s.titleSchema,
-  slug: s.slugSchema,
-  excerpt: s.excerptSchema,
-  tags: t.Array(s.tagSchema),
+  title: titleSchema,
+  slug: slugSchema,
+  excerpt: excerptSchema,
+  tags: t.Array(tagSchema),
 
-  id: s.idSchema,
-  updatedAt: s.dateSchema,
-  createdAt: s.dateSchema,
+  id: idSchema,
+  updatedAt: dateSchema,
+  createdAt: dateSchema,
+});
+
+export const paginatedPostsFullSchema = t.Object({
+  items: t.Array(fullPostSchema),
+  nextCursor: t.Optional(idSchema),
+  hasMore: t.Boolean(),
+});
+
+export const paginatedPostsPreviewSchema = t.Object({
+  items: t.Array(postPreviewSchema),
+  nextCursor: t.Optional(idSchema),
+  hasMore: t.Boolean(),
+});
+
+export const paginatedPostsMinimalSchema = t.Object({
+  items: t.Array(postMinimalSchema),
+  nextCursor: t.Optional(idSchema),
+  hasMore: t.Boolean(),
 });
 
 export const orderDirectionSchema = t.Union([t.Literal('asc'), t.Literal('desc')]);

@@ -7,6 +7,14 @@
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@root": ["./"],
+      "@utils": ["./utils/"],
+      "@prisma": ["./prisma/"],
+      "@routes/*": ["./routes/"],
+      "@plugins": ["./utils/plugins/"]
+    },
 
     // Bundler mode
     "moduleResolution": "bundler",

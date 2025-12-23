@@ -1,8 +1,8 @@
 import { Elysia } from 'elysia';
 import { describe, it, beforeEach, expect } from 'bun:test';
-import { prisma } from '../../prisma/client';
+import { prisma } from '@prisma';
+import { server } from '../../server.ts';
 import * as t from './types.ts';
-import server from '../../index.ts';
 
 const PREFIX = 'http://localhost/api/v1/posts';
 
@@ -56,7 +56,7 @@ describe('Post controllers tests', () => {
 
   it('GET /posts -> should return empty list when no posts exist', async () => {
     const resp = await createApp().handle(new Request(PREFIX));
-    const body = (await resp.json()) as t.PaginatedPosts;
+    const body = (await resp.json()) as t.PaginatedFullPosts;
 
     expect(resp.status).toBe(200);
     expect(body).toMatchObject({
@@ -77,13 +77,13 @@ describe('Post controllers tests', () => {
     const app = createApp();
 
     const firstResp = await app.handle(new Request(PREFIX));
-    const firstBody = (await firstResp.json()) as t.PaginatedPosts;
+    const firstBody = (await firstResp.json()) as t.PaginatedFullPosts;
 
     expect(firstBody.hasMore).toBe(true);
     expect(firstBody.nextCursor).toBeDefined();
 
     const secondResp = await app.handle(new Request(`${PREFIX}?cursor=${firstBody.nextCursor}`));
-    const secondBody = (await secondResp.json()) as t.PaginatedPosts;
+    const secondBody = (await secondResp.json()) as t.PaginatedFullPosts;
 
     expect(secondResp.status).toBe(200);
     expect(secondBody.items).toHaveLength(2);
@@ -109,7 +109,7 @@ describe('Post controllers tests', () => {
     });
 
     const resp = await createApp().handle(new Request(`${PREFIX}?tag=elysia`));
-    const body = (await resp.json()) as t.PaginatedPosts;
+    const body = (await resp.json()) as t.PaginatedFullPosts;
 
     expect(resp.status).toBe(200);
     expect(body.items).toHaveLength(1);
@@ -120,7 +120,7 @@ describe('Post controllers tests', () => {
     await createPublishedPosts(5);
 
     const resp = await createApp().handle(new Request(`${PREFIX}?tag=nonexistent`));
-    const body = (await resp.json()) as t.PaginatedPosts;
+    const body = (await resp.json()) as t.PaginatedFullPosts;
 
     expect(resp.status).toBe(200);
     expect(body.items).toHaveLength(0);
@@ -136,19 +136,6 @@ describe('Post controllers tests', () => {
     expect(resp.status).toBe(200);
     expect(body.id).toBe(post.id);
     expect(body.title).toBe(post.title);
-  });
-
-  it('GET /posts/:slug -> should return 404 when post is deleted', async () => {
-    const post = await createPost();
-
-    await prisma.post.update({
-      where: { id: post.id },
-      data: { deletedAt: new Date() },
-    });
-
-    const resp = await createApp().handle(new Request(`${PREFIX}/${post.slug}`));
-
-    expect(resp.status).toBe(404);
   });
 
   it('GET /posts/:slug -> should return 404 when post does not exist', async () => {

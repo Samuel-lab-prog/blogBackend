@@ -1,10 +1,9 @@
-import type { Prisma } from '../../prisma/generated/client';
-import type { UserCreateInput } from '../../prisma/generated/models';
+import type { Prisma, UserCreateInput } from '@prisma';
 
 export type InsertUser = UserCreateInput;
 export type UserRow = Prisma.UserGetPayload<object>;
 
-export type Filter = {
+export type UserFilter = {
   selectBy: UserUniqueKey | 'all';
 };
 

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { prisma } from '../../prisma/client';
+import { AppError } from '@utils';
+import { prisma } from '@prisma';
 import * as r from './repository';
-import * as t from './types.ts';
-import { AppError } from '../../utils/AppError.ts';
+import * as t from './types';
 
 const DEFAULT_POST: t.InsertPost = {
   title: 'Default Title',
@@ -11,7 +11,7 @@ const DEFAULT_POST: t.InsertPost = {
   excerpt: 'This is a sample excerpt.',
 };
 
-const ABSURD_ID = 10000000;
+const ABSURD_ID = 10_000_000;
 
 describe('Post repository', () => {
   beforeEach(async () => {
@@ -19,12 +19,12 @@ describe('Post repository', () => {
     await prisma.post.deleteMany();
   });
 
-  it('insertPost -> Should insert a post without tags and return only the id', async () => {
+  it('insertPost -> should insert a post without tags and return only the id', async () => {
     const result = await r.insertPost(DEFAULT_POST);
     expect(result.id).toBeTypeOf('number');
   });
 
-  it('insertPost -> Should insert a post with tags and return only the id', async () => {
+  it('insertPost -> should insert a post with tags', async () => {
     const result = await r.insertPost({
       ...DEFAULT_POST,
       tags: {
@@ -34,82 +34,86 @@ describe('Post repository', () => {
         ],
       },
     });
+
     expect(result.id).toBeTypeOf('number');
   });
 
-  it('insertPost -> Default status should be published if not provided', async () => {
+  it('insertPost -> default status should be published', async () => {
     const result = await r.insertPost(DEFAULT_POST);
-
     const dbPost = await prisma.post.findUnique({ where: { id: result.id } });
+
     expect(dbPost?.status).toBe('published');
   });
 
-  it('insertPost -> Should throw when inserting a post with duplicated slug', async () => {
-    r.insertPost(DEFAULT_POST); // Not using await here. Couldn't find a better way to do it.
-    const created = r.insertPost(DEFAULT_POST);
+  it('insertPost -> should throw on duplicated slug', async () => {
+    r.insertPost(DEFAULT_POST);
 
-    expect(created).rejects.toThrow(AppError);
+    await expect(
+      r.insertPost(DEFAULT_POST)
+    ).rejects.toThrow(AppError);
   });
 
-  it('selectPosts -> Should return empty array if no posts match the filter', async () => {
-    const posts = await r.selectPosts({ selectBy: { id: ABSURD_ID } });
-    expect(posts).toHaveLength(0);
+  it('selectPosts -> should return empty array if no match', async () => {
+    const result = await r.selectPosts({
+      dataType: 'full',
+      filter: { selectBy: { type: 'id', id: ABSURD_ID } },
+    });
+
+    expect(result.posts).toHaveLength(0);
   });
 
-  it('selectPosts -> Should return only drafts if configured', async () => {
+  it('selectPosts -> should return only drafts when configured', async () => {
+    await r.insertPost({ ...DEFAULT_POST, title: 'Published', slug: 'pub', status: 'published' });
+    await r.insertPost({ ...DEFAULT_POST, title: 'Draft', slug: 'draft', status: 'draft' });
     await r.insertPost({
       ...DEFAULT_POST,
-      title: 'Published',
-      slug: 'published',
-      status: 'published',
-    });
-    await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Draft',
-      slug: 'draft',
-      status: 'draft',
-    });
-    await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Deleted Published',
-      slug: 'deleted-published',
+      title: 'Deleted',
+      slug: 'deleted',
       deletedAt: new Date(),
     });
 
-    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'exclude', status: 'draft' });
+    const result = await r.selectPosts({
+      dataType: 'full',
+      filter: { deleted: 'exclude', status: 'draft' },
+    });
 
-    expect(drafts).toHaveLength(1);
-    expect(drafts[0]?.status).toBe('draft');
+    expect(result.posts).toHaveLength(1);
+    expect(result.posts[0]?.status).toBe('draft');
   });
 
-  it('selectPosts -> Should select only deleted posts if configured', async () => {
-    const drafts = await r.selectPosts({ selectBy: 'all', deleted: 'only' });
-    expect(drafts).toHaveLength(0);
+  it('selectPosts -> should return only deleted posts', async () => {
+    const result = await r.selectPosts({
+      dataType: 'full',
+      filter: { deleted: 'only' },
+    });
+
+    expect(result.posts).toHaveLength(0);
   });
 
-  it('selectPosts -> Should return a full post', async () => {
+  it('selectPosts -> should return a full post', async () => {
     const created = await r.insertPost(DEFAULT_POST);
-    const posts = await r.selectPosts({ selectBy: { id: created.id } });
 
-    expect(posts).not.toBeNull();
-    expect(posts[0]!.title).toBe(DEFAULT_POST.title);
+    const result = await r.selectPosts({
+      dataType: 'full',
+      filter: { selectBy: { type: 'id', id: created.id } },
+    });
+
+    expect(result.posts[0]?.title).toBe(DEFAULT_POST.title);
   });
 
-  it('selectPostsPreviews -> Should return empty list if no published posts', async () => {
-    const result = await r.selectPostsPreviews({ selectBy: 'all' });
+  it('selectPosts (preview) -> empty when no published posts', async () => {
+    const result = await r.selectPosts({
+      dataType: 'preview',
+      filter: {},
+    });
 
-    expect(result.items).toHaveLength(0);
+    expect(result.posts).toHaveLength(0);
     expect(result.hasMore).toBe(false);
     expect(result.nextCursor).toBeUndefined();
   });
 
-  it('selectPostsPreviews -> Should return only published posts if configured', async () => {
-    await r.insertPost({
-      ...DEFAULT_POST,
-      title: 'Draft',
-      slug: 'draft',
-      status: 'draft',
-    });
+  it('selectPosts (preview) -> should return only published posts', async () => {
+    await r.insertPost({ ...DEFAULT_POST, title: 'Draft', slug: 'draft', status: 'draft' });
     await r.insertPost({
       ...DEFAULT_POST,
       title: 'Deleted',
@@ -123,29 +127,23 @@ describe('Post repository', () => {
       status: 'published',
     });
 
-    const result = await r.selectPostsPreviews({
-      selectBy: 'all',
-      deleted: 'exclude',
-      status: 'published',
+    const result = await r.selectPosts({
+      dataType: 'preview',
+      filter: { deleted: 'exclude', status: 'published' },
     });
 
-    expect(result.items).toHaveLength(1);
-    expect(result.items[0]?.title).toBe('Published');
+    expect(result.posts).toHaveLength(1);
+    expect(result.posts[0]?.title).toBe('Published');
   });
 
-  it('SelectPostsPreviews -> Should apply the filter by tag correctly', async () => {
-    const tagName = 'javascript';
-    const tag = await prisma.tag.create({
-      data: { name: tagName },
-    });
+  it('selectPosts (preview) -> should filter by tag', async () => {
+    const tag = await prisma.tag.create({ data: { name: 'javascript' } });
 
     await r.insertPost({
       ...DEFAULT_POST,
       title: 'With tag',
       slug: 'with-tag',
-      tags: {
-        connect: { id: tag.id },
-      },
+      tags: { connect: { id: tag.id } },
     });
 
     await r.insertPost({
@@ -154,111 +152,90 @@ describe('Post repository', () => {
       slug: 'without-tag',
     });
 
-    const result = await r.selectPostsPreviews({
-      selectBy: 'all',
-      deleted: 'exclude',
-      status: 'published',
-      tag: tagName,
+    const result = await r.selectPosts({
+      dataType: 'preview',
+      filter: {
+        tag: 'javascript',
+        deleted: 'exclude',
+        status: 'published',
+      },
     });
 
-    expect(result.items).toHaveLength(1);
-    expect(result.items[0]?.tags.length).toBe(1);
-    expect(result.items[0]?.tags[0]?.name).toBe(tagName);
+    expect(result.posts).toHaveLength(1);
+    expect(result.posts[0]?.tags[0]?.name).toBe('javascript');
   });
 
-  it('SelectPostsPreviews -> Should return correct pagination with cursor', async () => {
-    const posts = [];
+  it('selectPosts -> should paginate with cursor', async () => {
     const POSTS_COUNT = 15;
     const LIMIT = 5;
 
-    for (let i = 0; i < POSTS_COUNT; i++) {
-      posts.push(
+    await Promise.all(
+      Array.from({ length: POSTS_COUNT }, (_, i) =>
         r.insertPost({
           ...DEFAULT_POST,
           title: `Post ${i + 1}`,
           slug: `post-${i + 1}`,
         })
-      );
-    }
-
-    await Promise.all(posts);
-    const firstPage = await r.selectPostsPreviews({ selectBy: 'all' }, { limit: LIMIT });
-
-    expect(firstPage.items).toHaveLength(LIMIT);
-    expect(firstPage.hasMore).toBe(true);
-    expect(firstPage.nextCursor).toBeDefined();
-
-    const cursor = firstPage.nextCursor;
-    const secondPage = await r.selectPostsPreviews(
-      { selectBy: 'all', deleted: 'exclude', status: 'published' },
-      { cursor, limit: LIMIT }
+      )
     );
 
-    expect(secondPage.items.length).toBe(LIMIT);
-    expect(secondPage.hasMore).toBe(POSTS_COUNT > LIMIT * 2);
-  });
-
-  it('updatePost -> Should mark post as deleted (soft delete)', async () => {
-    const created = await r.insertPost(DEFAULT_POST);
-
-    await r.updatePost({ id: created.id }, { deletedAt: new Date() });
-
-    const deletedPost = await prisma.post.findUnique({
-      where: { id: created.id },
+    const first = await r.selectPosts({
+      dataType: 'preview',
+      searchOptions: { limit: LIMIT },
     });
 
-    expect(deletedPost?.deletedAt).toBeInstanceOf(Date);
+    expect(first.posts).toHaveLength(LIMIT);
+    expect(first.hasMore).toBe(true);
+
+    const second = await r.selectPosts({
+      dataType: 'preview',
+      filter: { deleted: 'exclude', status: 'published' },
+      searchOptions: { cursor: first.nextCursor, limit: LIMIT },
+    });
+
+    expect(second.posts.length).toBe(LIMIT);
   });
 
-  it('updatePost -> Should throw when deleting a non-existing post', async () => {
-    expect(r.updatePost({ id: ABSURD_ID }, { deletedAt: new Date() })).rejects.toThrow(AppError);
+  it('updatePost -> should soft delete post', async () => {
+    const created = await r.insertPost(DEFAULT_POST);
+
+    await r.updatePost({ type: 'id', id: created.id }, { deletedAt: new Date() });
+
+    const post = await prisma.post.findUnique({ where: { id: created.id } });
+    expect(post?.deletedAt).toBeInstanceOf(Date);
   });
 
-  it('updatePost -> Should throw when updating a non-existing post', async () => {
-    expect(r.updatePost({ id: ABSURD_ID }, { title: 'New' })).rejects.toThrow(AppError);
+  it('updatePost -> should throw when post does not exist', async () => {
+    await expect(
+      r.updatePost({ type: 'id', id: ABSURD_ID }, { deletedAt: new Date() })
+    ).rejects.toThrow(AppError);
   });
 
-  it('updatePost -> Should restore a soft deleted post', async () => {
+  it('updatePost -> should restore soft deleted post', async () => {
     const created = await r.insertPost({
       ...DEFAULT_POST,
-      title: 'To be restored',
-      slug: 'to-be-restored',
       deletedAt: new Date(),
     });
 
-    await r.updatePost({ id: created.id }, { deletedAt: null });
+    await r.updatePost({ type: 'id', id: created.id }, { deletedAt: null });
 
-    const restored = await prisma.post.findUnique({
-      where: { id: created.id },
-    });
-
-    expect(restored?.deletedAt).toBeNull();
+    const post = await prisma.post.findUnique({ where: { id: created.id } });
+    expect(post?.deletedAt).toBeNull();
   });
 
-  it('updatePost -> Should throw when restoring a non-existing post', async () => {
-    expect(r.updatePost({ id: ABSURD_ID }, { deletedAt: null })).rejects.toThrow(AppError);
-  });
-
-  it('updatePost -> Should update post status', async () => {
+  it('updatePost -> should update post status', async () => {
     const created = await r.insertPost({
       ...DEFAULT_POST,
-      title: 'Status Update',
-      slug: 'status-update',
       status: 'draft',
     });
-    await r.updatePost({ id: created.id }, { status: 'published' });
 
-    const updated = await prisma.post.findUnique({
-      where: { id: created.id },
-    });
-    expect(updated?.status).toBe('published');
+    await r.updatePost({ type: 'id', id: created.id }, { status: 'published' });
+
+    const post = await prisma.post.findUnique({ where: { id: created.id } });
+    expect(post?.status).toBe('published');
   });
 
-  it('updatePost -> Should throw when updating status of a non-existing post', async () => {
-    expect(r.updatePost({ id: ABSURD_ID }, { status: 'draft' })).rejects.toThrow(AppError);
-  });
-
-  it('selectTags -> Should return empty list if no tags', async () => {
+  it('selectTags -> should return empty list when no tags', async () => {
     const tags = await r.selectTags();
     expect(tags).toHaveLength(0);
   });

@@ -1,10 +1,9 @@
 import bcrypt from 'bcryptjs';
-import { generateToken, verifyToken } from '../../utils/jwt.ts';
-import { selectUser } from '../users/repository.ts';
-import { throwUnauthorizedError } from '../../utils/AppError.ts';
-import type { UserRow } from '../users/types.ts';
+import { generateToken, verifyToken, throwUnauthorizedError } from '@utils';
+import { selectUser } from '../users/repository';
+import { type UserRow } from '../users/types';
 
-export async function login(
+export async function loginUser(
   email: string,
   password: string
 ): Promise<{ data: { id: number }; token: string }> {

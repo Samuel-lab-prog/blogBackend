@@ -4,12 +4,9 @@ import { openapi, fromTypes } from '@elysiajs/openapi';
 import { rateLimit } from 'elysia-rate-limit';
 import { BunAdapter } from 'elysia/adapter/bun';
 
-import { ErrorPlugin } from './utils/plugins/errorPlugin';
-import { LoggerPlugin } from './utils/plugins/loggerPlugin';
-import { sanitize } from './utils/xssClean';
-
-import { postsRouter } from './routes/posts/controllers';
-import { authRouter } from './routes/auth/controllers';
+import { ErrorPlugin, LoggerPlugin, sanitize } from '@utils';
+import { postsRouter } from 'routes/posts/controllers';
+import { authRouter } from 'routes/auth/controllers';
 
 const PREFIX = '/api/v1';
 const INSTANCE_NAME = 'mainServerInstance';
@@ -39,7 +36,7 @@ const ELYSIA_SETTINGS = {
   },
 };
 
-export default new Elysia(ELYSIA_SETTINGS)
+export const server = new Elysia(ELYSIA_SETTINGS)
   .use(LoggerPlugin)
   .use(ErrorPlugin)
   .use(
@@ -49,12 +46,7 @@ export default new Elysia(ELYSIA_SETTINGS)
       skip: () => process.env.NODE_ENV === 'test',
     })
   )
-  .use(
-    cors({
-      credentials: true,
-      origin: 'http://localhost:5173',
-    })
-  )
+  .use(cors())
   .use(authRouter)
   .use(postsRouter)
   .use(openapi(OPEN_API_SETTINGS))

@@ -11,6 +11,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.15.6",
+    "barrelsby": "^2.8.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -27,14 +28,16 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch src/index.ts",
-    "format": "eslint . --fix && prettier --write .",
+    "lint": "eslint . --fix",
+    "format": "prettier --write .",
     "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile dist/server src/index.ts",
     "test": "bun test",
     "migrate": "bunx prisma migrate dev",
     "seed": "bunx prisma db seed",
     "generate": "bunx prisma generate",
     "reset": "bunx prisma migrate reset --force",
-    "drop": "bunx prisma db push --force-reset"
+    "drop": "bunx prisma db push --force-reset",
+    "barrels": "barrelsby --config barrels.config.json"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",

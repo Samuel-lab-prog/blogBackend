@@ -1,9 +1,13 @@
-import * as r from './repository.ts';
-import * as t from './types.ts';
-import { throwNotFoundError } from '../../utils/AppError.ts';
+import * as r from './repository';
+import * as t from './types';
+import { throwNotFoundError } from '@utils';
 import slugify from 'slugify';
 
-export async function registerPost(body: t.PostNewPost): Promise<{ id: number }> {
+/* ----------------------------- CREATE ----------------------------- */
+
+export async function registerPost(
+  body: t.PostNewPost
+): Promise<{ id: number }> {
   const slug = slugify(body.title, { lower: true, strict: true });
   const { tags, ...postData } = body;
 
@@ -26,85 +30,137 @@ export async function registerPost(body: t.PostNewPost): Promise<{ id: number }>
   });
 }
 
-export async function fetchPost(identifier: t.PostUniqueKey): Promise<t.FullPost> {
-  const posts = await r.selectPosts({
-    selectBy: identifier,
-    deleted: 'exclude',
-    status: 'published',
+/* ----------------------------- READ ------------------------------ */
+
+export async function fetchPost(
+  key: t.PostUniqueKey
+): Promise<t.FullPost> {
+  const { posts } = await r.selectPosts({
+    filter: { selectBy: key },
+    dataType: 'full',
   });
+
   if (!posts[0]) {
     throwNotFoundError('Post not found');
   }
+
   return posts[0];
 }
 
-export async function fetchAllPostsPreviews(
+export async function fetchAllVisiblePostsPreviews(
   filter: { tag?: string },
-  searchOptions: t.SearchOptions
-): Promise<{ items: t.PostPreview[]; nextCursor?: number; hasMore: boolean }> {
-  return await r.selectPostsPreviews(
-    { selectBy: 'all', deleted: 'exclude', status: 'published', tag: filter.tag },
-    {
-      cursor: searchOptions.cursor,
-      limit: searchOptions.limit,
-      orderBy: searchOptions.orderBy,
-      orderDirection: searchOptions.orderDirection,
-    }
-  );
+  searchOptions: t.PostSearchOptions
+): Promise<{
+  items: t.PostPreview[];
+  nextCursor?: number;
+  hasMore: boolean;
+}> {
+  const { posts, nextCursor, hasMore } = await r.selectPosts({
+    filter: {
+      deleted: 'exclude',
+      status: 'published',
+      ...filter,
+    },
+    searchOptions,
+    dataType: 'preview',
+  });
+
+  return {
+    items: posts,
+    nextCursor,
+    hasMore,
+  };
 }
 
 export async function fetchAllDrafts(): Promise<t.FullPost[]> {
-  return await r.selectPosts({ selectBy: 'all', deleted: 'exclude', status: 'draft' });
+  const { posts } = await r.selectPosts({
+    filter: {
+      deleted: 'exclude',
+      status: 'draft',
+    },
+    dataType: 'full',
+  });
+
+  return posts;
 }
 
-export async function softRemovePost(identifier: t.PostUniqueKey): Promise<{ id: number }> {
-  return await r.updatePost(identifier, { deletedAt: new Date() });
+export async function fetchAllDeletedPosts(): Promise<t.FullPost[]> {
+  const { posts } = await r.selectPosts({
+    filter: { deleted: 'only' },
+    searchOptions: {
+      orderBy: 'createdAt',
+      orderDirection: 'desc',
+    },
+    dataType: 'full',
+  });
+
+  return posts;
+}
+
+/* ----------------------------- UPDATE ----------------------------- */
+
+export async function softRemovePost(
+  key: t.PostUniqueKey
+): Promise<{ id: number }> {
+  return r.updatePost(key, { deletedAt: new Date() });
+}
+
+export async function restoreDeletedPost(
+  key: t.PostUniqueKey
+): Promise<{ id: number }> {
+  return r.updatePost(key, { deletedAt: null });
 }
 
 export async function modifyPost(
-  identifier: t.PostUniqueKey,
+  key: t.PostUniqueKey,
   data: t.PatchPost
 ): Promise<{ id: number }> {
-  const prismaData: Partial<t.UpdatePost> = {
-    title: data.title,
-    excerpt: data.excerpt,
-    content: data.content,
-  };
+  const prismaData: Partial<t.UpdatePost> = {};
 
   if (data.title) {
+    prismaData.title = data.title;
     prismaData.slug = slugify(data.title, {
       lower: true,
       strict: true,
     });
   }
 
+  if (data.excerpt) prismaData.excerpt = data.excerpt;
+  if (data.content) prismaData.content = data.content;
+
   if (data.tags) {
+    const normalizedTags = [
+      ...new Set(
+        data.tags.map((tag) =>
+          tag.trim().charAt(0).toUpperCase() +
+          tag.trim().slice(1).toLowerCase()
+        )
+      ),
+    ];
+
     prismaData.tags = {
-      set: data.tags.map((tag) => ({ id: tag })),
+      set: [],
+      connectOrCreate: normalizedTags.map((tag) => ({
+        where: { name: tag },
+        create: { name: tag },
+      })),
     };
   }
-  return await r.updatePost(identifier, prismaData);
-}
 
-export async function fetchAllDeletedPosts(): Promise<t.FullPost[]> {
-  return await r.selectPosts({ selectBy: 'all', deleted: 'only' });
-}
-
-export async function fetchPostsMinimalData(): Promise<t.PostMinimalData[]> {
-  return await r.selectPostsMinimalData({ selectBy: 'all', deleted: 'exclude' });
-}
-
-export async function restoreDeletedPost(identifier: t.PostUniqueKey): Promise<{ id: number }> {
-  return await r.updatePost(identifier, { deletedAt: null });
+  return r.updatePost(key, prismaData);
 }
 
 export async function modifyPostStatus(
-  identifier: t.PostUniqueKey,
+  key: t.PostUniqueKey,
   status: t.PostStatus
 ): Promise<{ id: number }> {
-  return await r.updatePost(identifier, { status });
+  return r.updatePost(key, { status });
 }
 
-export async function fetchTags(filter?: t.TagFilter): Promise<t.Tag[]> {
-  return await r.selectTags(filter);
+/* ----------------------------- TAGS ------------------------------ */
+
+export async function fetchTags(
+  filter?: t.TagFilter
+): Promise<t.TagType[]> {
+  return r.selectTags(filter);
 }

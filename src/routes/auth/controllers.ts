@@ -1,10 +1,7 @@
 import { Elysia, t } from 'elysia';
-import { appErrorSchema } from '../../utils/AppError.ts';
-import { loginSchema } from '../../utils/schemas.ts';
-import { login } from '../auth/services.ts';
-import { SetupPlugin } from '../../utils/plugins/setupPlugin.ts';
-import { log } from '../../utils/logger.ts';
-import { authPlugin } from '../../utils/plugins/authPlugin.ts';
+import { appErrorSchema, log, loginSchema } from '@utils';
+import { authPlugin, SetupPlugin } from '@utils';
+import { loginUser } from './services';
 
 export const authRouter = new Elysia().group('/auth', (app) =>
   app
@@ -14,7 +11,7 @@ export const authRouter = new Elysia().group('/auth', (app) =>
       async ({ body, cookie, set, store }) => {
         const authInitiated = performance.now();
 
-        const result = await login(body.email, body.password);
+        const result = await loginUser(body.email, body.password);
 
         cookie.token!.value = result.token;
         cookie.token!.httpOnly = true;

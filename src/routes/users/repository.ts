@@ -1,5 +1,5 @@
-import { prisma } from '../../prisma/client.ts';
-import { withPrismaErrorHandling } from '../../utils/AppError.ts';
+import { prisma } from '@prisma';
+import { withPrismaErrorHandling } from '@utils';
 import * as t from './types.ts';
 
 export function selectUser(identifier: t.UserUniqueKey): Promise<t.UserRow | null> {

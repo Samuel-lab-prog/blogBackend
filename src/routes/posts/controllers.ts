@@ -1,36 +1,29 @@
 import { Elysia, t } from 'elysia';
-import { appErrorSchema } from '../../utils/AppError.ts';
-import { idSchema } from '../../utils/schemas.ts';
+import { idSchema, appErrorSchema, tagSchema } from '@utils';
+import { authPlugin } from '@utils';
+import * as types from './types';
+import * as services from './services';
+import * as schemas from './schemas';
 
-import * as services from './services.ts';
-import * as schemas from './schemas.ts';
-import { authPlugin } from '../../utils/plugins/authPlugin.ts';
+function parsePostKey(idOrSlug: string | number): types.PostUniqueKey {
+  return typeof idOrSlug === 'number'
+    ? { type: 'id', id: idOrSlug }
+    : { type: 'slug', slug: idOrSlug };
+}
 
 export const postsRouter = new Elysia({ prefix: '/posts' })
   .as('scoped')
   .get(
     '/',
     async ({ query }) => {
-      const filter = {
-        tag: query.tag,
-      };
-      const searchOptions = {
-        cursor: query.cursor ?? undefined,
-        limit: query.limit ?? undefined,
-        orderBy: query.orderBy ?? undefined,
-        orderDirection: query.orderDirection ?? undefined,
-      };
-      return await services.fetchAllPostsPreviews(filter, searchOptions);
+      const { cursor, limit, orderBy, orderDirection, ...filter } = query;
+
+      return services.fetchAllVisiblePostsPreviews(
+        filter,
+        { cursor, limit, orderBy, orderDirection }
+      );
     },
     {
-      response: {
-        200: t.Object({
-          items: t.Array(schemas.postPreviewSchema),
-          nextCursor: t.Optional(idSchema),
-          hasMore: t.Boolean(),
-        }),
-        500: appErrorSchema,
-      },
       query: t.Object({
         cursor: t.Optional(idSchema),
         tag: t.Optional(t.String()),
@@ -38,20 +31,25 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         orderBy: t.Optional(schemas.orderBySchema),
         orderDirection: t.Optional(schemas.orderDirectionSchema),
       }),
+      response: {
+        200: schemas.paginatedPostsPreviewSchema,
+        500: appErrorSchema,
+      },
       detail: {
-        summary: 'Get all previews',
+        summary: 'Get published post previews',
         tags: ['Posts'],
       },
     }
   )
+
   .get(
-    '/:slug',
+    '/:id',
     async ({ params }) => {
-      return services.fetchPost(params);
+      return services.fetchPost(parsePostKey(params.id));
     },
     {
       params: t.Object({
-        slug: t.String(),
+        id: t.Union([idSchema, t.String()]),
       }),
       response: {
         200: schemas.fullPostSchema,
@@ -59,74 +57,56 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Get a post by its ID',
+        summary: 'Get a post by id or slug',
         tags: ['Posts'],
       },
     }
   )
+
   .get(
     '/tags',
     async ({ query }) => {
-      console.log('Fetching tags with params:', query);
-      const filter = {
+      return services.fetchTags({
         nameContains: query.nameContains,
         includeFromDeleted: query.deleted,
         includeFromDrafts: query.draft,
-      };
-      return await services.fetchTags(filter);
+      });
     },
     {
-      response: {
-        200: t.Array(schemas.tagSchema),
-        500: appErrorSchema,
-      },
       query: t.Object({
-        deleted: t.Optional(t.Boolean()), // Using string to capture query params
+        deleted: t.Optional(t.Boolean()),
         draft: t.Optional(t.Boolean()),
         nameContains: t.Optional(t.String()),
       }),
-      detail: {
-        summary: 'Get all post tags',
-        tags: ['Posts'],
-      },
-    }
-  )
-  .use(authPlugin)
-  .get(
-    '/minimal',
-    async () => {
-      return await services.fetchPostsMinimalData();
-    },
-    {
       response: {
-        200: t.Array(schemas.postMinimalSchema),
+        200: t.Array(tagSchema),
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Get minimal data for all posts',
+        summary: 'Get post tags',
         tags: ['Posts'],
       },
     }
   )
+  /* ----------------------------- AUTH ------------------------------ */
+  .use(authPlugin)
   .post(
     '/',
     async ({ body, set }) => {
       set.status = 201;
-      return await services.registerPost(body);
+      return services.registerPost(body);
     },
     {
       body: schemas.postNewPost,
       response: {
-        201: t.Object({
-          id: idSchema,
-        }),
+        201: t.Object({ id: idSchema }),
         400: appErrorSchema,
         401: appErrorSchema,
         422: appErrorSchema,
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Create',
+        summary: 'Create post',
         tags: ['Posts'],
       },
     }
@@ -134,7 +114,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/drafts',
     async () => {
-      return await services.fetchAllDrafts();
+      return services.fetchAllDrafts();
     },
     {
       response: {
@@ -143,59 +123,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Get all drafts',
-        tags: ['Posts'],
-      },
-    }
-  )
-  .delete(
-    '/:id',
-    async ({ params, set }) => {
-      const result = await services.softRemovePost({ id: params.id });
-      set.status = 200;
-      return result;
-    },
-    {
-      params: t.Object({
-        id: idSchema,
-      }),
-      response: {
-        200: t.Object({
-          id: idSchema,
-        }),
-        401: appErrorSchema,
-        404: appErrorSchema,
-        500: appErrorSchema,
-      },
-      detail: {
-        summary: 'Soft delete a post by its ID',
-        tags: ['Posts'],
-      },
-    }
-  )
-  .patch(
-    '/:id',
-    async ({ params, body }) => {
-      return await services.modifyPost({ id: params.id }, body);
-    },
-    {
-      params: t.Object({
-        id: idSchema,
-      }),
-      body: schemas.patchPost,
-      response: {
-        200: t.Object({
-          id: idSchema,
-        }),
-        400: appErrorSchema,
-        401: appErrorSchema,
-        404: appErrorSchema,
-        409: appErrorSchema,
-        422: appErrorSchema,
-        500: appErrorSchema,
-      },
-      detail: {
-        summary: 'Update a post by its ID',
+        summary: 'Get drafts',
         tags: ['Posts'],
       },
     }
@@ -203,7 +131,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/deleted',
     async () => {
-      return await services.fetchAllDeletedPosts();
+      return services.fetchAllDeletedPosts();
     },
     {
       response: {
@@ -212,7 +140,52 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Get all deleted posts',
+        summary: 'Get deleted posts',
+        tags: ['Posts'],
+      },
+    }
+  )
+  .delete(
+    '/:id',
+    async ({ params }) => {
+      return services.softRemovePost(parsePostKey(params.id));
+    },
+    {
+      params: t.Object({
+        id: t.Union([idSchema, t.String()]),
+      }),
+      response: {
+        200: t.Object({ id: idSchema }),
+        401: appErrorSchema,
+        404: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Soft delete post',
+        tags: ['Posts'],
+      },
+    }
+  )
+  .patch(
+    '/:id',
+    async ({ params, body }) => {
+      return services.modifyPost(parsePostKey(params.id), body);
+    },
+    {
+      params: t.Object({
+        id: t.Union([idSchema, t.String()]),
+      }),
+      body: schemas.patchPost,
+      response: {
+        200: t.Object({ id: idSchema }),
+        400: appErrorSchema,
+        401: appErrorSchema,
+        404: appErrorSchema,
+        422: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Update post',
         tags: ['Posts'],
       },
     }
@@ -220,22 +193,20 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .patch(
     '/:id/restore',
     async ({ params }) => {
-      return await services.restoreDeletedPost({ id: params.id });
+      return services.restoreDeletedPost(parsePostKey(params.id));
     },
     {
       params: t.Object({
-        id: idSchema,
+        id: t.Union([idSchema, t.String()]),
       }),
       response: {
-        200: t.Object({
-          id: idSchema,
-        }),
+        200: t.Object({ id: idSchema }),
         401: appErrorSchema,
         404: appErrorSchema,
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Restore a deleted post by its ID',
+        summary: 'Restore deleted post',
         tags: ['Posts'],
       },
     }
@@ -243,26 +214,27 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .patch(
     '/:id/status',
     async ({ params, body }) => {
-      return await services.modifyPostStatus({ id: params.id }, body.status);
+      return services.modifyPostStatus(
+        parsePostKey(params.id),
+        body.status
+      );
     },
     {
       params: t.Object({
-        id: idSchema,
+        id: t.Union([idSchema, t.String()]),
       }),
       body: t.Object({
         status: schemas.fullPostSchema.properties.status,
       }),
       response: {
-        200: t.Object({
-          id: idSchema,
-        }),
+        200: t.Object({ id: idSchema }),
         400: appErrorSchema,
         401: appErrorSchema,
         404: appErrorSchema,
         500: appErrorSchema,
       },
       detail: {
-        summary: 'Update post status by its ID',
+        summary: 'Update post status',
         tags: ['Posts'],
       },
     }

@@ -4,52 +4,58 @@ import { AppError } from '../AppError.ts';
 import { log } from '../logger.ts';
 import { SetupPlugin } from './setupPlugin.ts';
 
-export function handleError(set: any, error: unknown, code: any, reqId: string) {
-  if (error instanceof AppError) {
-    return respondWithAppError(
-      set,
-      error,
-      reqId,
-      error instanceof Error ? error.stack : 'Not available'
+export function handleError(set: any, error: unknown, code: any, reqId: string, request: Request) {
+  const isAppError = error instanceof AppError;
+
+  const path = request.url.substring(request.url.indexOf('/', 8));
+  const method = request.method;
+  let status = undefined;
+  let message = undefined;
+
+  if (isAppError) {
+    status = (error as AppError).statusCode;
+    message = (error as AppError).errorMessages.join('; ');
+    set.status = status;
+
+    log.error(
+      {
+        reqId,
+        path,
+        method,
+        status,
+        message,
+      },
+      'An error occurred while processing the request'
     );
+
+    return sendAppError(error);
   }
 
-  const normalizedCode =
-    typeof code === 'string' ? code : typeof code?.type === 'string' ? code.type : 'UNKNOWN';
+  let normalizedCode = code;
+
+  if (typeof normalizedCode !== 'string') {
+    normalizedCode = 'UNKNOWN';
+  }
 
   const converted = convertElysiaError(normalizedCode);
-
-  if (converted instanceof AppError) {
-    return respondWithAppError(
-      set,
-      converted,
-      reqId,
-      error instanceof Error ? error.stack : undefined
-    );
-  }
-
-  const statusCode = typeof set.status === 'number' && set.status >= 400 ? set.status : 500;
-
-  set.status = statusCode;
-
-  return {
-    errorMessages: ['An unexpected error occurred'],
-    statusCode,
-  };
-}
-
-function respondWithAppError(set: any, err: AppError, reqId: string, stack?: string) {
-  set.status = err.statusCode;
+  status = converted.statusCode;
+  message = converted.errorMessages.join('; ');
+  set.status = status;
 
   log.error(
     {
       reqId,
-      statusCode: err.statusCode,
-      message: err.errorMessages.join(', '),
-      stack: stack ?? err.stack,
+      path,
+      method,
+      status,
+      message,
     },
-    'Error occurred:'
+    'An error occurred while processing the request'
   );
+
+  return sendAppError(converted);
+}
+function sendAppError(err: AppError) {
   return {
     errorMessages: err.errorMessages,
     statusCode: err.statusCode,
@@ -86,6 +92,6 @@ function convertElysiaError(code: string): AppError {
 
 export const ErrorPlugin = new Elysia()
   .use(SetupPlugin)
-  .onError({ as: 'scoped' }, ({ error, set, code, store }) =>
-    handleError(set, error, code, store.reqId)
+  .onError({ as: 'scoped' }, ({ error, set, code, store, request }) =>
+    handleError(set, error, code, store.reqId, request)
   );
