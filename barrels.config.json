@@ -3,5 +3,6 @@
   "exclude": [".*\\.test\\.ts$"],
   "singleQuotes": true,
   "delete": true,
-  "name": "index"
+  "name": "index",
+  "location": "all"
 }

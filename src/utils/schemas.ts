@@ -7,6 +7,7 @@ export const dateSchema = t.Date({
   example: '2024-01-01T12:00:00Z',
   ...makeValidationError('CreatedAt must be a valid date string'),
 });
+
 export const idSchema = t.Number({
   minimum: 1,
   example: 1,

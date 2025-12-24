@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia';
 import { describe, it, beforeEach, expect } from 'bun:test';
-import { prisma } from '@prisma';
+import { prisma } from '@prisma/client';
 import { server } from '../../server.ts';
 import * as t from './types.ts';
 
@@ -60,7 +60,7 @@ describe('Post controllers tests', () => {
 
     expect(resp.status).toBe(200);
     expect(body).toMatchObject({
-      items: [],
+      posts: [],
       hasMore: false,
     });
     expect(body.nextCursor).toBeUndefined();
@@ -86,10 +86,10 @@ describe('Post controllers tests', () => {
     const secondBody = (await secondResp.json()) as t.PaginatedFullPosts;
 
     expect(secondResp.status).toBe(200);
-    expect(secondBody.items).toHaveLength(2);
+    expect(secondBody.posts).toHaveLength(2);
 
-    const firstIds = firstBody.items.map((p) => p.id);
-    const secondIds = secondBody.items.map((p) => p.id);
+    const firstIds = firstBody.posts.map((p) => p.id);
+    const secondIds = secondBody.posts.map((p) => p.id);
 
     for (const id of secondIds) {
       expect(firstIds).not.toContain(id);
@@ -112,8 +112,8 @@ describe('Post controllers tests', () => {
     const body = (await resp.json()) as t.PaginatedFullPosts;
 
     expect(resp.status).toBe(200);
-    expect(body.items).toHaveLength(1);
-    expect(body.items[0]!.title).toBe('Tagged post');
+    expect(body.posts).toHaveLength(1);
+    expect(body.posts[0]!.title).toBe('Tagged post');
   });
 
   it('GET /posts -> should return empty list when tag does not exist', async () => {
@@ -123,7 +123,7 @@ describe('Post controllers tests', () => {
     const body = (await resp.json()) as t.PaginatedFullPosts;
 
     expect(resp.status).toBe(200);
-    expect(body.items).toHaveLength(0);
+    expect(body.posts).toHaveLength(0);
     expect(body.hasMore).toBe(false);
   });
 

@@ -31,27 +31,18 @@ export async function registerPost(body: t.PostNewPost): Promise<{ id: number }>
 /* ----------------------------- READ ------------------------------ */
 
 export async function fetchPost(key: t.PostUniqueKey): Promise<t.FullPost> {
-  const { posts } = await r.selectPosts({
-    filter: { selectBy: key },
-    dataType: 'full',
-  });
-
-  if (!posts[0]) {
+  const post = await r.selectPost({ selectBy: key });
+  if (!post) {
     throwNotFoundError('Post not found');
   }
-
-  return posts[0];
+  return post;
 }
 
-export async function fetchAllVisiblePostsPreviews(
+export async function fetchPostsPreviews(
   filter: { tag?: string },
   searchOptions: t.PostSearchOptions
-): Promise<{
-  items: t.PostPreview[];
-  nextCursor?: number;
-  hasMore: boolean;
-}> {
-  const { posts, nextCursor, hasMore } = await r.selectPosts({
+): Promise<t.PaginatedPostsPreview> {
+  return await r.selectPosts({
     filter: {
       deleted: 'exclude',
       status: 'published',
@@ -60,15 +51,17 @@ export async function fetchAllVisiblePostsPreviews(
     searchOptions,
     dataType: 'preview',
   });
-
-  return {
-    items: posts,
-    nextCursor,
-    hasMore,
-  };
 }
 
-export async function fetchAllDrafts(): Promise<t.FullPost[]> {
+export async function fetchPostsMinimal(): Promise<t.PaginatedMinimalPosts> {
+  const data = await r.selectPosts({
+    filter: { deleted: 'exclude' },
+    dataType: 'minimal',
+  });
+  return data;
+}
+
+export async function fetchDrafts(): Promise<t.FullPost[]> {
   const { posts } = await r.selectPosts({
     filter: {
       deleted: 'exclude',
@@ -80,7 +73,7 @@ export async function fetchAllDrafts(): Promise<t.FullPost[]> {
   return posts;
 }
 
-export async function fetchAllDeletedPosts(): Promise<t.FullPost[]> {
+export async function fetchDeletedPosts(): Promise<t.FullPost[]> {
   const { posts } = await r.selectPosts({
     filter: { deleted: 'only' },
     searchOptions: {

@@ -44,7 +44,8 @@ export const fullPostSchema = t.Object({
   createdAt: dateSchema,
   updatedAt: dateSchema,
 });
-export const postMinimalSchema = t.Object({
+
+export const minimalPostSchema = t.Object({
   id: idSchema,
   title: titleSchema,
 });
@@ -54,26 +55,25 @@ export const postPreviewSchema = t.Object({
   slug: slugSchema,
   excerpt: excerptSchema,
   tags: t.Array(tagSchema),
-
   id: idSchema,
   updatedAt: dateSchema,
   createdAt: dateSchema,
 });
 
 export const paginatedPostsFullSchema = t.Object({
-  items: t.Array(fullPostSchema),
+  posts: t.Array(fullPostSchema),
   nextCursor: t.Optional(idSchema),
   hasMore: t.Boolean(),
 });
 
 export const paginatedPostsPreviewSchema = t.Object({
-  items: t.Array(postPreviewSchema),
+  posts: t.Array(postPreviewSchema),
   nextCursor: t.Optional(idSchema),
   hasMore: t.Boolean(),
 });
 
 export const paginatedPostsMinimalSchema = t.Object({
-  items: t.Array(postMinimalSchema),
+  posts: t.Array(minimalPostSchema),
   nextCursor: t.Optional(idSchema),
   hasMore: t.Boolean(),
 });
@@ -84,3 +84,11 @@ export const orderBySchema = t.Union([
   t.Literal('updatedAt'),
   t.Literal('id'),
 ]);
+
+export const searchQueryParamSchema = t.Object({
+  cursor: t.Optional(idSchema),
+  tag: t.Optional(t.String()),
+  limit: t.Optional(t.Number()),
+  orderBy: t.Optional(orderBySchema),
+  orderDirection: t.Optional(orderDirectionSchema),
+});

@@ -1,7 +1,9 @@
-import { prisma, type PostWhereInput, type PostSelect } from '@prisma';
+import { prisma } from '@prisma/client';
+import type { PostSelect, PostWhereInput } from '@prisma/generated/models';
 import { withPrismaErrorHandling } from '@utils';
 import * as t from './types.ts';
 
+// Create
 export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
   return withPrismaErrorHandling<{ id: number }>(() =>
     prisma.post.create({
@@ -10,6 +12,8 @@ export async function insertPost(data: t.InsertPost): Promise<{ id: number }> {
     })
   );
 }
+
+// Read
 
 // You don't need to explicitly pass the T parameter, TS will infer it from the options
 export async function selectPosts<T extends keyof t.PostDataType>(
@@ -42,6 +46,16 @@ export async function selectPosts<T extends keyof t.PostDataType>(
   };
 }
 
+export async function selectPost(filter: t.SelectPostsFilter): Promise<t.FullPost | null> {
+  const where = buildPostsWhereClause(filter);
+  return await withPrismaErrorHandling<t.FullPost | null>(() =>
+    prisma.post.findFirst({
+      where,
+      select: postSelectMap['full'] as PostSelect,
+    })
+  );
+}
+
 // Need to refactor this later
 export function selectTags(tagFilter?: t.TagFilter): Promise<t.TagType[]> {
   const nameContains = tagFilter?.nameContains ?? undefined;
@@ -64,6 +78,8 @@ export function selectTags(tagFilter?: t.TagFilter): Promise<t.TagType[]> {
   );
 }
 
+// Update/Soft Delete/Restore etc.
+
 export async function updatePost(
   key: t.PostUniqueKey,
   data: t.UpdatePost
@@ -78,6 +94,8 @@ export async function updatePost(
     })
   );
 }
+
+// Helpers
 
 function buildPostsWhereClause(filter: t.SelectPostsFilter = {}): PostWhereInput {
   const where: PostWhereInput = {};

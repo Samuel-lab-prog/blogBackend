@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { idSchema, appErrorSchema, tagSchema } from '@utils';
-import { authPlugin } from '@utils';
+import { authPlugin } from '@plugins';
 import * as types from './types';
 import * as services from './services';
 import * as schemas from './schemas';
@@ -18,7 +18,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     async ({ query }) => {
       const { cursor, limit, orderBy, orderDirection, ...filter } = query;
 
-      return services.fetchAllVisiblePostsPreviews(filter, {
+      return services.fetchPostsPreviews(filter, {
         cursor,
         limit,
         orderBy,
@@ -26,13 +26,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       });
     },
     {
-      query: t.Object({
-        cursor: t.Optional(idSchema),
-        tag: t.Optional(t.String()),
-        limit: t.Optional(t.Number()),
-        orderBy: t.Optional(schemas.orderBySchema),
-        orderDirection: t.Optional(schemas.orderDirectionSchema),
-      }),
+      query: schemas.searchQueryParamSchema,
       response: {
         200: schemas.paginatedPostsPreviewSchema,
         500: appErrorSchema,
@@ -116,7 +110,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/drafts',
     async () => {
-      return services.fetchAllDrafts();
+      return services.fetchDrafts();
     },
     {
       response: {
@@ -133,7 +127,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
   .get(
     '/deleted',
     async () => {
-      return services.fetchAllDeletedPosts();
+      return services.fetchDeletedPosts();
     },
     {
       response: {
@@ -143,6 +137,23 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       },
       detail: {
         summary: 'Get deleted posts',
+        tags: ['Posts'],
+      },
+    }
+  )
+  .get(
+    '/minimal',
+    async () => {
+      return services.fetchPostsMinimal();
+    },
+    {
+      response: {
+        200: schemas.paginatedPostsMinimalSchema,
+        401: appErrorSchema,
+        500: appErrorSchema,
+      },
+      detail: {
+        summary: 'Get all posts minimal data',
         tags: ['Posts'],
       },
     }

@@ -1,15 +1,17 @@
 import * as s from './schemas';
-import type { Prisma, PostCreateInput, PostUpdateInput } from '@prisma';
-
+import type { PostCreateInput, PostUpdateInput } from '@prisma/generated/models';
+import type { Prisma } from '@prisma/generated/client';
 //Schema-derived types
 export type PostNewPost = (typeof s.postNewPost)['static'];
 export type PatchPost = (typeof s.patchPost)['static'];
 
 export type FullPost = (typeof s.fullPostSchema)['static'];
 export type PostPreview = (typeof s.postPreviewSchema)['static'];
-export type PostMinimalData = (typeof s.postMinimalSchema)['static'];
+export type PostMinimalData = (typeof s.minimalPostSchema)['static'];
 
 export type PaginatedFullPosts = (typeof s.paginatedPostsFullSchema)['static'];
+export type PaginatedPostsPreview = (typeof s.paginatedPostsPreviewSchema)['static'];
+export type PaginatedMinimalPosts = (typeof s.paginatedPostsMinimalSchema)['static'];
 
 export type PostStatus = (typeof s.fullPostSchema.properties.status)['static'];
 

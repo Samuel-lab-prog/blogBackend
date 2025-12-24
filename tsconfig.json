@@ -11,9 +11,9 @@
     "paths": {
       "@root": ["./"],
       "@utils": ["./utils/"],
-      "@prisma": ["./prisma/"],
-      "@routes/*": ["./routes/"],
-      "@plugins": ["./utils/plugins/"]
+      "@plugins": ["./utils/plugins/"],
+      "@routes/*": ["./routes/*"],
+      "@prisma/*": ["./prisma/*"]
     },
 
     // Bundler mode

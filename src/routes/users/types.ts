@@ -1,4 +1,5 @@
-import type { Prisma, UserCreateInput } from '@prisma';
+import type { UserCreateInput } from '@prisma/generated/models';
+import type { Prisma } from '@prisma/generated/client';
 
 export type InsertUser = UserCreateInput;
 export type UserRow = Prisma.UserGetPayload<object>;

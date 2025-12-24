@@ -7,7 +7,4 @@ export * from './jwt';
 export * from './logger';
 export * from './schemas';
 export * from './xssClean';
-export * from './plugins/authPlugin';
-export * from './plugins/errorPlugin';
-export * from './plugins/loggerPlugin';
-export * from './plugins/setupPlugin';
+export * from './plugins/index';

@@ -1,4 +1,4 @@
-import { prisma } from '@prisma';
+import { prisma } from '@prisma/client';
 import { withPrismaErrorHandling } from '@utils';
 import * as t from './types.ts';
 

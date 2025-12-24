@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { AppError } from '@utils';
-import { prisma } from '@prisma';
+import { prisma } from '@prisma/client';
 import * as r from './repository';
 import * as t from './types';
 
