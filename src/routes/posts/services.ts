@@ -19,11 +19,11 @@ export async function registerPost(body: t.PostNewPost): Promise<{ id: number }>
     slug,
     tags: normalizedTags?.length
       ? {
-          connectOrCreate: normalizedTags.map((tag) => ({
-            where: { name: tag },
-            create: { name: tag },
-          })),
-        }
+        connectOrCreate: normalizedTags.map((tag) => ({
+          where: { name: tag },
+          create: { name: tag },
+        })),
+      }
       : undefined,
   });
 }
@@ -38,6 +38,8 @@ export async function fetchPost(key: t.PostUniqueKey): Promise<t.FullPost> {
   return post;
 }
 
+// Only allowing tags here. Cliente shoud not be able to filter by draft/deleted/status
+// These filters will be used only in the admin routes
 export async function fetchPostsPreviews(
   filter: { tag?: string },
   searchOptions: t.PostSearchOptions
@@ -53,51 +55,23 @@ export async function fetchPostsPreviews(
   });
 }
 
-export async function fetchPostsMinimal(): Promise<t.PaginatedMinimalPosts> {
+export async function fetchPostsMinimal(filter: t.SelectPostsFilter, searchOptions: t.PostSearchOptions): Promise<t.PaginatedMinimalPosts> {
   const data = await r.selectPosts({
-    filter: { deleted: 'exclude' },
+    filter,
+    searchOptions,
     dataType: 'minimal',
   });
   return data;
 }
 
-export async function fetchDrafts(): Promise<t.FullPost[]> {
-  const { posts } = await r.selectPosts({
-    filter: {
-      deleted: 'exclude',
-      status: 'draft',
-    },
-    dataType: 'full',
-  });
-
-  return posts;
-}
-
-export async function fetchDeletedPosts(): Promise<t.FullPost[]> {
-  const { posts } = await r.selectPosts({
-    filter: { deleted: 'only' },
-    searchOptions: {
-      orderBy: 'createdAt',
-      orderDirection: 'desc',
-    },
-    dataType: 'full',
-  });
-
-  return posts;
-}
-
 /* ----------------------------- UPDATE ----------------------------- */
 
-export async function softRemovePost(key: t.PostUniqueKey): Promise<{ id: number }> {
-  return r.updatePost(key, { deletedAt: new Date() });
-}
-
-export async function restoreDeletedPost(key: t.PostUniqueKey): Promise<{ id: number }> {
-  return r.updatePost(key, { deletedAt: null });
-}
-
 export async function modifyPost(key: t.PostUniqueKey, data: t.PatchPost): Promise<{ id: number }> {
-  const prismaData: Partial<t.UpdatePost> = {};
+  const prismaData: t.UpdatePost = {};
+
+  if (data.deleted) {
+    prismaData.deletedAt = data.deleted ? new Date() : null;
+  }
 
   if (data.title) {
     prismaData.title = data.title;
@@ -109,6 +83,7 @@ export async function modifyPost(key: t.PostUniqueKey, data: t.PatchPost): Promi
 
   if (data.excerpt) prismaData.excerpt = data.excerpt;
   if (data.content) prismaData.content = data.content;
+  if (data.status) prismaData.status = data.status;
 
   if (data.tags) {
     const normalizedTags = [
@@ -131,11 +106,14 @@ export async function modifyPost(key: t.PostUniqueKey, data: t.PatchPost): Promi
   return r.updatePost(key, prismaData);
 }
 
-export async function modifyPostStatus(
-  key: t.PostUniqueKey,
-  status: t.PostStatus
-): Promise<{ id: number }> {
-  return r.updatePost(key, { status });
+/* ----------------------------- DELETE ----------------------------- */
+
+export async function softRemovePost(key: t.PostUniqueKey): Promise<{ id: number }> {
+  return r.updatePost(key, { deletedAt: new Date() });
+}
+
+export async function restoreDeletedPost(key: t.PostUniqueKey): Promise<{ id: number }> {
+  return r.updatePost(key, { deletedAt: null });
 }
 
 /* ----------------------------- TAGS ------------------------------ */

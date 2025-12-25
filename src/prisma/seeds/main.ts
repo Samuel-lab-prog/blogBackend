@@ -2,6 +2,7 @@ import seedUsers from './users';
 import seedPosts from './posts';
 
 async function seedAll() {
+
   console.log('🟢 Starting seeds...');
 
   await seedUsers();

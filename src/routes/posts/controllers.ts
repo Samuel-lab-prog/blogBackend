@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { idSchema, appErrorSchema, tagSchema } from '@utils';
+import { idSchema, appErrorSchema, tagSchema, tagNameSchema } from '@utils';
 import { authPlugin } from '@plugins';
 import * as types from './types';
 import * as services from './services';
@@ -17,7 +17,6 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     '/',
     async ({ query }) => {
       const { cursor, limit, orderBy, orderDirection, ...filter } = query;
-
       return services.fetchPostsPreviews(filter, {
         cursor,
         limit,
@@ -26,7 +25,13 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       });
     },
     {
-      query: schemas.searchQueryParamSchema,
+      query: t.Partial(t.Object({
+        tag: tagNameSchema,
+        cursor: idSchema,
+        limit: idSchema, // ideally PositiveInteger
+        orderBy: schemas.orderBySchema,
+        orderDirection: schemas.orderDirectionSchema,
+      })),
       response: {
         200: schemas.paginatedPostsPreviewSchema,
         500: appErrorSchema,
@@ -45,7 +50,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     },
     {
       params: t.Object({
-        id: t.Union([idSchema, t.String()]),
+        id: idSchema
       }),
       response: {
         200: schemas.fullPostSchema,
@@ -108,43 +113,20 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     }
   )
   .get(
-    '/drafts',
-    async () => {
-      return services.fetchDrafts();
-    },
-    {
-      response: {
-        200: t.Array(schemas.fullPostSchema),
-        401: appErrorSchema,
-        500: appErrorSchema,
-      },
-      detail: {
-        summary: 'Get drafts',
-        tags: ['Posts'],
-      },
-    }
-  )
-  .get(
-    '/deleted',
-    async () => {
-      return services.fetchDeletedPosts();
-    },
-    {
-      response: {
-        200: t.Array(schemas.fullPostSchema),
-        401: appErrorSchema,
-        500: appErrorSchema,
-      },
-      detail: {
-        summary: 'Get deleted posts',
-        tags: ['Posts'],
-      },
-    }
-  )
-  .get(
     '/minimal',
-    async () => {
-      return services.fetchPostsMinimal();
+    async ({ query }) => {
+      const { deleted, status, tag, ...rest } = query;
+      if (deleted !== undefined) {
+        if (deleted !== 'only' && deleted !== 'exclude') {
+          throw new Error("Invalid value for 'deleted' filter. Use 'only' or 'exclude'.");
+        }
+      }
+      if (status !== undefined) {
+        if (status !== 'draft' && status !== 'published') {
+          throw new Error("Invalid value for 'status' filter. Use 'draft' or 'published'.");
+        }
+      }
+      return services.fetchPostsMinimal({ deleted, status, tag }, rest);
     },
     {
       response: {
@@ -152,6 +134,15 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
         401: appErrorSchema,
         500: appErrorSchema,
       },
+      query: t.Partial(t.Object({
+        deleted: t.String(),
+        status: t.String(),
+        tag: tagNameSchema,
+        cursor: idSchema,
+        limit: idSchema, // ideally PositiveInteger
+        orderBy: schemas.orderBySchema,
+        orderDirection: schemas.orderDirectionSchema,
+      })),
       detail: {
         summary: 'Get all posts minimal data',
         tags: ['Posts'],
@@ -165,7 +156,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     },
     {
       params: t.Object({
-        id: t.Union([idSchema, t.String()]),
+        id: idSchema,
       }),
       response: {
         200: t.Object({ id: idSchema }),
@@ -186,7 +177,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     },
     {
       params: t.Object({
-        id: t.Union([idSchema, t.String()]),
+        id: idSchema,
       }),
       body: schemas.patchPost,
       response: {
@@ -210,7 +201,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
     },
     {
       params: t.Object({
-        id: t.Union([idSchema, t.String()]),
+        id: idSchema,
       }),
       response: {
         200: t.Object({ id: idSchema }),
@@ -220,31 +211,6 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
       },
       detail: {
         summary: 'Restore deleted post',
-        tags: ['Posts'],
-      },
-    }
-  )
-  .patch(
-    '/:id/status',
-    async ({ params, body }) => {
-      return services.modifyPostStatus(parsePostKey(params.id), body.status);
-    },
-    {
-      params: t.Object({
-        id: t.Union([idSchema, t.String()]),
-      }),
-      body: t.Object({
-        status: schemas.fullPostSchema.properties.status,
-      }),
-      response: {
-        200: t.Object({ id: idSchema }),
-        400: appErrorSchema,
-        401: appErrorSchema,
-        404: appErrorSchema,
-        500: appErrorSchema,
-      },
-      detail: {
-        summary: 'Update post status',
         tags: ['Posts'],
       },
     }

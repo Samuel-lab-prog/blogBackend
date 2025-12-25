@@ -20,13 +20,15 @@ export const postNewPost = t.Object({
   status: t.Optional(postStatusSchema),
 });
 
-export const patchPost = t.Object(
+export const patchPost = t.Partial(t.Object(
   {
-    title: t.Optional(titleSchema),
-    excerpt: t.Optional(excerptSchema),
-    content: t.Optional(contentSchema),
-    tags: t.Optional(t.Array(tagNameSchema)),
-  },
+    title: titleSchema,
+    excerpt: excerptSchema,
+    content: contentSchema,
+    tags: t.Array(tagNameSchema),
+    status: postStatusSchema,
+    deleted: t.Boolean(),
+  }),
   {
     minProperties: 1,
     ...makeValidationError('At least one field must be provided to update the post'),
@@ -84,11 +86,3 @@ export const orderBySchema = t.Union([
   t.Literal('updatedAt'),
   t.Literal('id'),
 ]);
-
-export const searchQueryParamSchema = t.Object({
-  cursor: t.Optional(idSchema),
-  tag: t.Optional(t.String()),
-  limit: t.Optional(t.Number()),
-  orderBy: t.Optional(orderBySchema),
-  orderDirection: t.Optional(orderDirectionSchema),
-});

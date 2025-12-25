@@ -25,12 +25,17 @@ export async function selectPosts<T extends keyof t.PostDataType>(
 }> {
   const { cursor, limit, orderBy, orderDirection } = normalizeSearchOptions(options.searchOptions);
   const where = buildPostsWhereClause(options.filter);
+  console.log('WHERE CLAUSE:', where);
+  console.log('cursor:', cursor, 'limit:', limit, 'orderBy:', orderBy, 'orderDirection:', orderDirection);
 
   const posts = await withPrismaErrorHandling(() =>
     prisma.post.findMany({
       where,
       select: postSelectMap[options.dataType] as PostSelect, // Using alias here is necessary for TS to infer correctly
-      orderBy: { [orderBy]: orderDirection },
+      orderBy: [ 
+        { [orderBy]: orderDirection },
+        { id: 'asc' }  
+       ],
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     })

@@ -11,6 +11,6 @@ export default defineConfig({
   },
 
   datasource: {
-    url: env('TEST_DATABASE_URL'),
+    url: env('PRODUCTION_DATABASE_URL'),
   },
 });
