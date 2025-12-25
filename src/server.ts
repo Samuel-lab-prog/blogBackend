@@ -37,6 +37,7 @@ const ELYSIA_SETTINGS = {
 };
 
 export const server = new Elysia(ELYSIA_SETTINGS)
+  .use(cors())
   .use(LoggerPlugin)
   .use(ErrorPlugin)
   .use(
@@ -46,19 +47,6 @@ export const server = new Elysia(ELYSIA_SETTINGS)
       skip: () => process.env.NODE_ENV === 'test',
     })
   )
-  .options('*', ({set}) => {
-    set.status = 204;
-    return;
-  }) // Enable pre-flight for all routes
-  .use(cors({
-    origin: [
-      'http://localhost:5173',
-      'https://seu-front-em-prod.onrender.com'
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }))
   .use(authRouter)
   .use(postsRouter)
   .use(openapi(OPEN_API_SETTINGS))
