@@ -8,7 +8,10 @@ export async function loginUser(
   password: string
 ): Promise<{ data: { id: number }; token: string }> {
   const user = await selectUser({ email });
-
+  console.log('User found:', user);
+  console.log('Password provided:', password);
+  console.log('Stored hashed password:', user?.password);
+  
   if (user && (await bcrypt.compare(password, user.password))) {
     return {
       data: { id: user.id },
