@@ -46,6 +46,10 @@ export const server = new Elysia(ELYSIA_SETTINGS)
       skip: () => process.env.NODE_ENV === 'test',
     })
   )
+  .options('*', ({set}) => {
+    set.status = 204;
+    return;
+  }) // Enable pre-flight for all routes
   .use(cors({
     origin: [
       'http://localhost:5173',
