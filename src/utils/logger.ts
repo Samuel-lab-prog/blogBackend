@@ -1,15 +1,13 @@
 import pino from 'pino';
 
-const env = process.env.NODE_ENV || 'development';
-let level = undefined;
+const env = process.env.NODE_ENV;
 
-if (env === 'production') {
-  level = 'info';
-} else if (env === 'test') {
-  level = 'silent';
-} else if (env === 'development') {
-  level = 'debug';
-}
+const level =
+  env === 'production'
+    ? 'info'
+    : env === 'test'
+    ? 'silent'
+    : 'debug'; // 👈 fallback seguro
 
 export const log = pino({
   level,
