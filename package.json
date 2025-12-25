@@ -26,17 +26,19 @@
     "typescript": "^5"
   },
   "scripts": {
-    "start": "bun run src/server.ts",
+    "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile dist/server src/server.ts",
+    "start": "dist/server.exe",
+    "generate": "npx prisma generate",
+    "migrateprod": "npx prisma migrate deploy",
+
+    "migratedev": "npx prisma migrate dev",
     "dev": "bun --watch src/server.ts",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
-    "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile dist/server src/server.ts",
     "test": "bun test",
-    "migrate": "bunx prisma migrate dev",
-    "seed": "bunx prisma db seed",
-    "generate": "bunx prisma generate",
-    "reset": "bunx prisma migrate reset --force",
-    "drop": "bunx prisma db push --force-reset",
+    "seed": "npx prisma db seed",
+    "reset": "npx prisma migrate reset --force",
+    "drop": "npx prisma db push --force-reset",
     "barrels": "barrelsby --config barrels.config.json"
   },
   "dependencies": {

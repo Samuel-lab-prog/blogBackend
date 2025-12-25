@@ -10,7 +10,7 @@ import { authRouter } from 'routes/auth/controllers';
 
 const PREFIX = '/api/v1';
 const INSTANCE_NAME = 'mainServerInstance';
-const HOST_NAME = 'localhost';
+const HOST_NAME = process.env.HOST_NAME || 'localhost';
 const PORT = Number(process.env.PORT) || 3000;
 
 const OPEN_API_SETTINGS = {
