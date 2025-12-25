@@ -1,5 +1,4 @@
 import seedUsers from './users';
-import seedPosts from './posts';
 
 async function seedAll() {
 
@@ -8,8 +7,6 @@ async function seedAll() {
   await seedUsers();
   console.log('✅ Users seeded');
 
-  await seedPosts();
-  console.log('✅ Posts seeded');
 }
 
 seedAll()
