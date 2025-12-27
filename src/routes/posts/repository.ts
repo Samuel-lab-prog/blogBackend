@@ -27,17 +27,6 @@ export async function selectPosts<T extends keyof t.PostDataType>(
 		options.searchOptions,
 	);
 	const where = buildPostsWhereClause(options.filter);
-	console.log('WHERE CLAUSE:', where);
-	console.log(
-		'cursor:',
-		cursor,
-		'limit:',
-		limit,
-		'orderBy:',
-		orderBy,
-		'orderDirection:',
-		orderDirection,
-	);
 
 	const posts = await withPrismaErrorHandling(() =>
 		prisma.post.findMany({

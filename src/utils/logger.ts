@@ -4,8 +4,8 @@ const env = process.env.NODE_ENV;
 
 let level = 'debug';
 
-if (env === 'production') {
-	level = 'info';
+if (env === 'test') {
+	level = 'silent';
 }
 
 export const log = pino({

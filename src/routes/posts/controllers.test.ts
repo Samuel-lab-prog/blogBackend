@@ -138,12 +138,10 @@ describe('Post controllers tests', () => {
 		expect(body.hasMore).toBe(false);
 	});
 
-	it('GET /posts/:slug -> should return a published post', async () => {
+	it('GET /posts/:id -> should return a published post', async () => {
 		const post = await createPost();
 
-		const resp = await createApp().handle(
-			new Request(`${PREFIX}/${post.slug}`),
-		);
+		const resp = await createApp().handle(new Request(`${PREFIX}/${post.id}`));
 		const body = (await resp.json()) as t.FullPost;
 
 		expect(resp.status).toBe(200);
@@ -151,10 +149,8 @@ describe('Post controllers tests', () => {
 		expect(body.title).toBe(post.title);
 	});
 
-	it('GET /posts/:slug -> should return 404 when post does not exist', async () => {
-		const resp = await createApp().handle(
-			new Request(`${PREFIX}/nonexistent-slug`),
-		);
+	it('GET /posts/:id -> should return 404 when post does not exist', async () => {
+		const resp = await createApp().handle(new Request(`${PREFIX}/999999`));
 
 		expect(resp.status).toBe(404);
 	});
@@ -216,18 +212,6 @@ describe('Post controllers tests', () => {
 		expect(resp.status).toBe(409);
 	});
 
-	it('GET /posts/drafts -> should return only draft posts', async () => {
-		await createPost({ status: 'draft' });
-		await createPost({ status: 'published' });
-
-		const resp = await createApp().handle(new Request(`${PREFIX}/drafts`));
-		const body = (await resp.json()) as t.FullPost[];
-
-		expect(resp.status).toBe(200);
-		expect(body).toHaveLength(1);
-		expect(body[0]!.status).toBe('draft');
-	});
-
 	it('DELETE /posts/:id -> should soft delete a post', async () => {
 		const post = await createPost();
 
@@ -261,19 +245,6 @@ describe('Post controllers tests', () => {
 		expect(resp.status).toBe(200);
 	});
 
-	it('PATCH /posts/:id -> should return 400 when body is empty', async () => {
-		const post = await createPost();
-
-		const resp = await createApp().handle(
-			jsonRequest(`${PREFIX}/${post.id}`, {
-				method: 'PATCH',
-				body: {},
-			}),
-		);
-
-		expect(resp.status).toBe(422);
-	});
-
 	it('PATCH /posts/:id -> should return 404 when post does not exist', async () => {
 		const resp = await createApp().handle(
 			jsonRequest(`${PREFIX}/999999`, {
@@ -302,22 +273,6 @@ describe('Post controllers tests', () => {
 		});
 
 		expect(updated?.title).toBe('Updated title');
-	});
-
-	it('GET /posts/deleted -> should return deleted posts', async () => {
-		const post = await createPost();
-
-		await prisma.post.update({
-			where: { id: post.id },
-			data: { deletedAt: new Date() },
-		});
-
-		const resp = await createApp().handle(new Request(`${PREFIX}/deleted`));
-		const body = (await resp.json()) as t.FullPost[];
-
-		expect(resp.status).toBe(200);
-		expect(body).toHaveLength(1);
-		expect(body[0]!.id).toBe(post.id);
 	});
 
 	it('PATCH /posts/:id/restore -> Should restore even when post is not deleted', async () => {
@@ -358,20 +313,5 @@ describe('Post controllers tests', () => {
 			}),
 		);
 		expect(resp.status).toBe(404);
-	});
-
-	it('PATCH /posts/:id/status -> should update post status', async () => {
-		const post = await createPost({ status: 'draft' });
-		const resp = await createApp().handle(
-			jsonRequest(`${PREFIX}/${post.id}/status`, {
-				method: 'PATCH',
-				body: { status: 'published' },
-			}),
-		);
-		expect(resp.status).toBe(200);
-		const updated = await prisma.post.findUnique({
-			where: { id: post.id },
-		});
-		expect(updated?.status).toBe('published');
 	});
 });

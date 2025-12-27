@@ -3,6 +3,13 @@
 import 'dotenv/config';
 import { defineConfig, env } from 'prisma/config';
 
+let url: string;
+if (process.env.NODE_ENV === 'test') {
+	url = env('TEST_DB_URL');
+} else {
+	url = env('PROD_DB_URL');
+}
+
 export default defineConfig({
 	schema: 'src/prisma/schema.prisma',
 	migrations: {
@@ -11,6 +18,6 @@ export default defineConfig({
 	},
 
 	datasource: {
-		url: env('PROD_DB_URL'),
+		url,
 	},
 });
