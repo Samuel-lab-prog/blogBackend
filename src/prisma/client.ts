@@ -3,7 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from './generated/client';
 
 let url: string;
-if (process.env.NODE_ENV === 'test') {
+if (process.env.NODE_ENV !== 'prod') {
 	url = `${process.env.TEST_DB_URL}`;
 } else {
 	url = `${process.env.PROD_DB_URL}`;

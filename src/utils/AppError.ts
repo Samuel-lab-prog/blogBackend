@@ -3,12 +3,11 @@ import { t } from 'elysia';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { log } from './logger.ts';
 
-export type AppErrorType = {
+export interface AppErrorType {
 	statusCode?: number;
 	errorMessages?: string[];
-	origin?: string;
 	originalError?: Error;
-};
+}
 
 export const appErrorSchema = t.Object({
 	errorMessages: t.Array(t.String()),

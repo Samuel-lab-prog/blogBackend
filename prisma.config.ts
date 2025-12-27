@@ -4,7 +4,7 @@ import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
 let url: string;
-if (process.env.NODE_ENV === 'test') {
+if (process.env.NODE_ENV !== 'prod') {
 	url = process.env.TEST_DB_URL!;
 } else {
 	url = process.env.PROD_DB_URL!;
