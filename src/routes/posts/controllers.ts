@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { idSchema, appErrorSchema, tagSchema, tagNameSchema } from '@utils';
+import { idSchema, appErrorSchema, tagSchema, tagNameSchema, log } from '@utils';
 import { authPlugin } from '@plugins';
 import * as types from './types';
 import * as services from './services';
@@ -181,6 +181,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 	.patch(
 		'/:id',
 		async ({ params, body }) => {
+			log.info({ body }, 'Patching post with data');
 			return services.modifyPost(parsePostKey(params.id), body);
 		},
 		{
