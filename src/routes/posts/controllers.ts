@@ -1,21 +1,20 @@
 import { Elysia, t } from 'elysia';
+import { idSchema, appErrorSchema, log } from '@utils';
+import { authPlugin } from '@plugins';
+import * as services from './services';
 import {
-	idSchema,
-	appErrorSchema,
 	tagSchema,
 	tagNameSchema,
-	log,
-} from '@utils';
-import { authPlugin } from '@plugins';
-import * as types from './types';
-import * as services from './services';
-import * as schemas from './schemas';
+	orderBySchema,
+	orderDirectionSchema,
+	paginatedPostsPreviewSchema,
+	fullPostSchema,
+	paginatedPostsMinimalSchema,
+	postNewPost,
+	patchPost,
+} from './schemas';
+import { parsePostKey } from './model/types.ts';
 
-function parsePostKey(idOrSlug: string | number): types.PostUniqueKey {
-	return typeof idOrSlug === 'number'
-		? { type: 'id', id: idOrSlug }
-		: { type: 'slug', slug: idOrSlug };
-}
 
 export const postsRouter = new Elysia({ prefix: '/posts' })
 	.as('scoped')
@@ -36,12 +35,12 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 					tag: tagNameSchema,
 					cursor: idSchema,
 					limit: idSchema, // ideally PositiveInteger
-					orderBy: schemas.orderBySchema,
-					orderDirection: schemas.orderDirectionSchema,
+					orderBy: orderBySchema,
+					orderDirection: orderDirectionSchema,
 				}),
 			),
 			response: {
-				200: schemas.paginatedPostsPreviewSchema,
+				200: paginatedPostsPreviewSchema,
 				500: appErrorSchema,
 			},
 			detail: {
@@ -61,7 +60,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 				id: idSchema,
 			}),
 			response: {
-				200: schemas.fullPostSchema,
+				200: fullPostSchema,
 				404: appErrorSchema,
 				500: appErrorSchema,
 			},
@@ -106,7 +105,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 			return services.registerPost(body);
 		},
 		{
-			body: schemas.postNewPost,
+			body: postNewPost,
 			response: {
 				201: t.Object({ id: idSchema }),
 				400: appErrorSchema,
@@ -142,7 +141,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 		},
 		{
 			response: {
-				200: schemas.paginatedPostsMinimalSchema,
+				200: paginatedPostsMinimalSchema,
 				401: appErrorSchema,
 				500: appErrorSchema,
 			},
@@ -153,8 +152,8 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 					tag: tagNameSchema,
 					cursor: idSchema,
 					limit: idSchema, // ideally PositiveInteger
-					orderBy: schemas.orderBySchema,
-					orderDirection: schemas.orderDirectionSchema,
+					orderBy: orderBySchema,
+					orderDirection: orderDirectionSchema,
 				}),
 			),
 			detail: {
@@ -194,7 +193,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 			params: t.Object({
 				id: idSchema,
 			}),
-			body: schemas.patchPost,
+			body: patchPost,
 			response: {
 				200: t.Object({ id: idSchema }),
 				400: appErrorSchema,

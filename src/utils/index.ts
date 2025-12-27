@@ -3,6 +3,7 @@
  */
 
 export * from './AppError';
+export * from './functions';
 export * from './jwt';
 export * from './logger';
 export * from './schemas';

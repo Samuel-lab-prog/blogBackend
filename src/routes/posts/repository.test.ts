@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { AppError } from '@utils';
 import { prisma } from '@prisma/client';
-import * as r from './repository';
-import * as t from './types';
+import { insertPost, selectPosts, selectTags, updatePost } from './repository';
+import { type InsertPost } from './model/types';
 
-const DEFAULT_POST: t.InsertPost = {
+const DEFAULT_POST: InsertPost = {
 	title: 'Default Title',
 	slug: 'default-title',
 	content: 'This is a sample post content.',
@@ -20,12 +20,12 @@ describe('Post repository', () => {
 	});
 
 	it('insertPost -> should insert a post without tags and return only the id', async () => {
-		const result = await r.insertPost(DEFAULT_POST);
+		const result = await insertPost(DEFAULT_POST);
 		expect(result.id).toBeTypeOf('number');
 	});
 
 	it('insertPost -> should insert a post with tags', async () => {
-		const result = await r.insertPost({
+		const result = await insertPost({
 			...DEFAULT_POST,
 			tags: {
 				connectOrCreate: [
@@ -39,20 +39,20 @@ describe('Post repository', () => {
 	});
 
 	it('insertPost -> default status should be published', async () => {
-		const result = await r.insertPost(DEFAULT_POST);
+		const result = await insertPost(DEFAULT_POST);
 		const dbPost = await prisma.post.findUnique({ where: { id: result.id } });
 
 		expect(dbPost?.status).toBe('published');
 	});
 
 	it('insertPost -> should throw on duplicated slug', async () => {
-		r.insertPost(DEFAULT_POST);
+		insertPost(DEFAULT_POST);
 
-		await expect(r.insertPost(DEFAULT_POST)).rejects.toThrow(AppError);
+		await expect(insertPost(DEFAULT_POST)).rejects.toThrow(AppError);
 	});
 
 	it('selectPosts -> should return empty array if no match', async () => {
-		const result = await r.selectPosts({
+		const result = await selectPosts({
 			dataType: 'full',
 			filter: { selectBy: { type: 'id', id: ABSURD_ID } },
 		});
@@ -61,26 +61,26 @@ describe('Post repository', () => {
 	});
 
 	it('selectPosts -> should return only drafts when configured', async () => {
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'Published',
 			slug: 'pub',
 			status: 'published',
 		});
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'Draft',
 			slug: 'draft',
 			status: 'draft',
 		});
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'Deleted',
 			slug: 'deleted',
 			deletedAt: new Date(),
 		});
 
-		const result = await r.selectPosts({
+		const result = await selectPosts({
 			dataType: 'full',
 			filter: { deleted: 'exclude', status: 'draft' },
 		});
@@ -90,7 +90,7 @@ describe('Post repository', () => {
 	});
 
 	it('selectPosts -> should return only deleted posts', async () => {
-		const result = await r.selectPosts({
+		const result = await selectPosts({
 			dataType: 'full',
 			filter: { deleted: 'only' },
 		});
@@ -99,9 +99,9 @@ describe('Post repository', () => {
 	});
 
 	it('selectPosts -> should return a full post', async () => {
-		const created = await r.insertPost(DEFAULT_POST);
+		const created = await insertPost(DEFAULT_POST);
 
-		const result = await r.selectPosts({
+		const result = await selectPosts({
 			dataType: 'full',
 			filter: { selectBy: { type: 'id', id: created.id } },
 		});
@@ -110,7 +110,7 @@ describe('Post repository', () => {
 	});
 
 	it('selectPosts (preview) -> empty when no published posts', async () => {
-		const result = await r.selectPosts({
+		const result = await selectPosts({
 			dataType: 'preview',
 			filter: {},
 		});
@@ -121,26 +121,26 @@ describe('Post repository', () => {
 	});
 
 	it('selectPosts (preview) -> should return only published posts', async () => {
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'Draft',
 			slug: 'draft',
 			status: 'draft',
 		});
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'Deleted',
 			slug: 'deleted',
 			deletedAt: new Date(),
 		});
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'Published',
 			slug: 'published',
 			status: 'published',
 		});
 
-		const result = await r.selectPosts({
+		const result = await selectPosts({
 			dataType: 'preview',
 			filter: { deleted: 'exclude', status: 'published' },
 		});
@@ -152,20 +152,20 @@ describe('Post repository', () => {
 	it('selectPosts (preview) -> should filter by tag', async () => {
 		const tag = await prisma.tag.create({ data: { name: 'javascript' } });
 
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'With tag',
 			slug: 'with-tag',
 			tags: { connect: { id: tag.id } },
 		});
 
-		await r.insertPost({
+		await insertPost({
 			...DEFAULT_POST,
 			title: 'Without tag',
 			slug: 'without-tag',
 		});
 
-		const result = await r.selectPosts({
+		const result = await selectPosts({
 			dataType: 'preview',
 			filter: {
 				tag: 'javascript',
@@ -184,7 +184,7 @@ describe('Post repository', () => {
 
 		await Promise.all(
 			Array.from({ length: POSTS_COUNT }, (_, i) =>
-				r.insertPost({
+				insertPost({
 					...DEFAULT_POST,
 					title: `Post ${i + 1}`,
 					slug: `post-${i + 1}`,
@@ -192,7 +192,7 @@ describe('Post repository', () => {
 			),
 		);
 
-		const first = await r.selectPosts({
+		const first = await selectPosts({
 			dataType: 'preview',
 			searchOptions: { limit: LIMIT },
 		});
@@ -200,7 +200,7 @@ describe('Post repository', () => {
 		expect(first.posts).toHaveLength(LIMIT);
 		expect(first.hasMore).toBe(true);
 
-		const second = await r.selectPosts({
+		const second = await selectPosts({
 			dataType: 'preview',
 			filter: { deleted: 'exclude', status: 'published' },
 			searchOptions: { cursor: first.nextCursor, limit: LIMIT },
@@ -210,12 +210,9 @@ describe('Post repository', () => {
 	});
 
 	it('updatePost -> should soft delete post', async () => {
-		const created = await r.insertPost(DEFAULT_POST);
+		const created = await insertPost(DEFAULT_POST);
 
-		await r.updatePost(
-			{ type: 'id', id: created.id },
-			{ deletedAt: new Date() },
-		);
+		await updatePost({ type: 'id', id: created.id }, { deletedAt: new Date() });
 
 		const post = await prisma.post.findUnique({ where: { id: created.id } });
 		expect(post?.deletedAt).toBeInstanceOf(Date);
@@ -223,36 +220,36 @@ describe('Post repository', () => {
 
 	it('updatePost -> should throw when post does not exist', async () => {
 		await expect(
-			r.updatePost({ type: 'id', id: ABSURD_ID }, { deletedAt: new Date() }),
+			updatePost({ type: 'id', id: ABSURD_ID }, { deletedAt: new Date() }),
 		).rejects.toThrow(AppError);
 	});
 
 	it('updatePost -> should restore soft deleted post', async () => {
-		const created = await r.insertPost({
+		const created = await insertPost({
 			...DEFAULT_POST,
 			deletedAt: new Date(),
 		});
 
-		await r.updatePost({ type: 'id', id: created.id }, { deletedAt: null });
+		await updatePost({ type: 'id', id: created.id }, { deletedAt: null });
 
 		const post = await prisma.post.findUnique({ where: { id: created.id } });
 		expect(post?.deletedAt).toBeNull();
 	});
 
 	it('updatePost -> should update post status', async () => {
-		const created = await r.insertPost({
+		const created = await insertPost({
 			...DEFAULT_POST,
 			status: 'draft',
 		});
 
-		await r.updatePost({ type: 'id', id: created.id }, { status: 'published' });
+		await updatePost({ type: 'id', id: created.id }, { status: 'published' });
 
 		const post = await prisma.post.findUnique({ where: { id: created.id } });
 		expect(post?.status).toBe('published');
 	});
 
 	it('selectTags -> should return empty list when no tags', async () => {
-		const tags = await r.selectTags();
+		const tags = await selectTags();
 		expect(tags).toHaveLength(0);
 	});
 });

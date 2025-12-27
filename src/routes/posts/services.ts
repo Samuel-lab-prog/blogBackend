@@ -1,13 +1,29 @@
-import * as r from './repository';
-import * as t from './types';
+import {
+	insertPost,
+	selectPost,
+	selectPosts,
+	updatePost,
+	selectTags,
+} from './repository';
+
+import type {
+	FullPost,
+	PostSearchOptions,
+	PaginatedPostsPreview,
+	PaginatedMinimalPosts,
+	PostUniqueKey,
+	PostNewPost,
+	PatchPost,
+	TagFilter,
+	TagType,
+	SelectPostsFilter,
+	UpdatePost,
+} from './model/types';
+
 import { throwNotFoundError } from '@utils';
 import slugify from 'slugify';
 
-/* ----------------------------- CREATE ----------------------------- */
-
-export async function registerPost(
-	body: t.PostNewPost,
-): Promise<{ id: number }> {
+export async function registerPost(body: PostNewPost): Promise<{ id: number }> {
 	const slug = slugify(body.title, { lower: true, strict: true });
 	const { tags, ...postData } = body;
 
@@ -16,7 +32,7 @@ export async function registerPost(
 		.filter(Boolean)
 		.map((tag) => tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase());
 
-	return r.insertPost({
+	return insertPost({
 		...postData,
 		slug,
 		tags: normalizedTags?.length
@@ -30,23 +46,21 @@ export async function registerPost(
 	});
 }
 
-/* ----------------------------- READ ------------------------------ */
-
-export async function fetchPost(key: t.PostUniqueKey): Promise<t.FullPost> {
-	const post = await r.selectPost({ selectBy: key });
+export async function fetchPost(key: PostUniqueKey): Promise<FullPost> {
+	const post = await selectPost({ selectBy: key });
 	if (!post) {
 		throwNotFoundError('Post not found');
 	}
 	return post;
 }
 
-// Only allowing tags here. Cliente shoud not be able to filter by draft/deleted/status
+// Only allowing tags here. User shoud not be able to filter by draft/deleted/status
 // These filters will be used only in the admin routes
 export async function fetchPostsPreviews(
 	filter: { tag?: string },
-	searchOptions: t.PostSearchOptions,
-): Promise<t.PaginatedPostsPreview> {
-	return await r.selectPosts({
+	searchOptions: PostSearchOptions,
+): Promise<PaginatedPostsPreview> {
+	return await selectPosts({
 		filter: {
 			deleted: 'exclude',
 			status: 'published',
@@ -58,10 +72,10 @@ export async function fetchPostsPreviews(
 }
 
 export async function fetchPostsMinimal(
-	filter: t.SelectPostsFilter,
-	searchOptions: t.PostSearchOptions,
-): Promise<t.PaginatedMinimalPosts> {
-	const data = await r.selectPosts({
+	filter: SelectPostsFilter,
+	searchOptions: PostSearchOptions,
+): Promise<PaginatedMinimalPosts> {
+	const data = await selectPosts({
 		filter,
 		searchOptions,
 		dataType: 'minimal',
@@ -69,17 +83,11 @@ export async function fetchPostsMinimal(
 	return data;
 }
 
-/* ----------------------------- UPDATE ----------------------------- */
-
 export async function modifyPost(
-	key: t.PostUniqueKey,
-	data: t.PatchPost,
+	key: PostUniqueKey,
+	data: PatchPost,
 ): Promise<{ id: number }> {
-	const prismaData: t.UpdatePost = {};
-
-	if (data.deleted) {
-		prismaData.deletedAt = data.deleted ? new Date() : null;
-	}
+	const prismaData: UpdatePost = {};
 
 	if (data.title) {
 		prismaData.title = data.title;
@@ -113,25 +121,21 @@ export async function modifyPost(
 		};
 	}
 
-	return r.updatePost(key, prismaData);
+	return updatePost(key, prismaData);
 }
 
-/* ----------------------------- DELETE ----------------------------- */
-
 export async function softRemovePost(
-	key: t.PostUniqueKey,
+	key: PostUniqueKey,
 ): Promise<{ id: number }> {
-	return r.updatePost(key, { deletedAt: new Date() });
+	return updatePost(key, { deletedAt: new Date() });
 }
 
 export async function restoreDeletedPost(
-	key: t.PostUniqueKey,
+	key: PostUniqueKey,
 ): Promise<{ id: number }> {
-	return r.updatePost(key, { deletedAt: null });
+	return updatePost(key, { deletedAt: null });
 }
 
-/* ----------------------------- TAGS ------------------------------ */
-
-export async function fetchTags(filter?: t.TagFilter): Promise<t.TagType[]> {
-	return r.selectTags(filter);
+export async function fetchTags(filter?: TagFilter): Promise<TagType[]> {
+	return selectTags(filter);
 }

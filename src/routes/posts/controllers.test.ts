@@ -2,7 +2,11 @@ import { Elysia } from 'elysia';
 import { describe, it, beforeEach, expect } from 'bun:test';
 import { prisma } from '@prisma/client';
 import { server } from '../../server.ts';
-import * as t from './types.ts';
+import type {
+	PaginatedFullPosts,
+	FullPost,
+	PostNewPost,
+} from './model/types.ts';
 
 const PREFIX = 'http://localhost/api/v1/posts';
 
@@ -63,7 +67,7 @@ describe('Post controllers tests', () => {
 
 	it('GET /posts -> should return empty list when no posts exist', async () => {
 		const resp = await createApp().handle(new Request(PREFIX));
-		const body = (await resp.json()) as t.PaginatedFullPosts;
+		const body = (await resp.json()) as PaginatedFullPosts;
 
 		expect(resp.status).toBe(200);
 		expect(body).toMatchObject({
@@ -84,7 +88,7 @@ describe('Post controllers tests', () => {
 		const app = createApp();
 
 		const firstResp = await app.handle(new Request(PREFIX));
-		const firstBody = (await firstResp.json()) as t.PaginatedFullPosts;
+		const firstBody = (await firstResp.json()) as PaginatedFullPosts;
 
 		expect(firstBody.hasMore).toBe(true);
 		expect(firstBody.nextCursor).toBeDefined();
@@ -92,7 +96,7 @@ describe('Post controllers tests', () => {
 		const secondResp = await app.handle(
 			new Request(`${PREFIX}?cursor=${firstBody.nextCursor}`),
 		);
-		const secondBody = (await secondResp.json()) as t.PaginatedFullPosts;
+		const secondBody = (await secondResp.json()) as PaginatedFullPosts;
 
 		expect(secondResp.status).toBe(200);
 		expect(secondBody.posts).toHaveLength(2);
@@ -118,7 +122,7 @@ describe('Post controllers tests', () => {
 		});
 
 		const resp = await createApp().handle(new Request(`${PREFIX}?tag=elysia`));
-		const body = (await resp.json()) as t.PaginatedFullPosts;
+		const body = (await resp.json()) as PaginatedFullPosts;
 
 		expect(resp.status).toBe(200);
 		expect(body.posts).toHaveLength(1);
@@ -131,7 +135,7 @@ describe('Post controllers tests', () => {
 		const resp = await createApp().handle(
 			new Request(`${PREFIX}?tag=nonexistent`),
 		);
-		const body = (await resp.json()) as t.PaginatedFullPosts;
+		const body = (await resp.json()) as PaginatedFullPosts;
 
 		expect(resp.status).toBe(200);
 		expect(body.posts).toHaveLength(0);
@@ -142,7 +146,7 @@ describe('Post controllers tests', () => {
 		const post = await createPost();
 
 		const resp = await createApp().handle(new Request(`${PREFIX}/${post.id}`));
-		const body = (await resp.json()) as t.FullPost;
+		const body = (await resp.json()) as FullPost;
 
 		expect(resp.status).toBe(200);
 		expect(body.id).toBe(post.id);
@@ -164,7 +168,7 @@ describe('Post controllers tests', () => {
 					content: 'content really good',
 					excerpt: 'excerpt here',
 					status: 'published',
-				} satisfies t.PostNewPost,
+				} satisfies PostNewPost,
 			}),
 		);
 
