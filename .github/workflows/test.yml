@@ -58,7 +58,7 @@ jobs:
           JWT_SECRET: 123456789supersecretkey987654321
           TEST_DB_URL: postgres://postgres:postgres@localhost:5432/blog_test
           NODE_ENV: test
-          
+
         run: bun test --coverage
 
   format:
