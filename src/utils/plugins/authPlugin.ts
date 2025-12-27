@@ -2,7 +2,6 @@ import Elysia from 'elysia';
 import { throwUnauthorizedError } from '@utils';
 import { authenticate } from '../../routes/auth/services';
 import { SetupPlugin } from './setupPlugin';
-import { log } from '../logger';
 
 export const authPlugin = new Elysia()
 	.use(SetupPlugin)
@@ -20,10 +19,6 @@ export const authPlugin = new Elysia()
 
 		try {
 			const token = cookie.token?.value;
-			log.info('Authenticating request with token from cookie');
-			log.info(`Token: ${token}`);
-			const type = typeof token;
-			log.info(`Token type: ${type}`);
 			if (!token || typeof token !== 'string') {
 				throwUnauthorizedError('No token provided');
 			}
