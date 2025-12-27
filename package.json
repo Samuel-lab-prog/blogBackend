@@ -26,7 +26,7 @@
 		"typescript": "^5"
 	},
 	"scripts": {
-		"build": "bun build src/server.ts --compile --minify-whitespace --minify-syntax --outfile dist/server && chmod +x dist/server",
+		"build": "bun build src/server.ts --compile --minify-whitespace --minify-syntax --outfile dist/server",
 		"start": "./dist/server",
 		"generate": "npx prisma generate",
 		"migrateprod": "npx prisma migrate deploy",
