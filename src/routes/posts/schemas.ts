@@ -27,7 +27,6 @@ export const patchPost = t.Partial(
 		content: contentSchema,
 		tags: t.Array(tagNameSchema),
 		status: postStatusSchema,
-		deleted: t.Boolean(),
 	}),
 	{
 		minProperties: 1,
