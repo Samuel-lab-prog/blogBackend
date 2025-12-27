@@ -20,10 +20,8 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: blog_test
         options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=5
+          --health-cmd="pg_isready -U postgres" --health-interval=5s
+          --health-timeout=5s --health-retries=5
 
     steps:
       - name: Checkout repository

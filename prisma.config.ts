@@ -4,13 +4,13 @@ import 'dotenv/config';
 import { defineConfig, env } from 'prisma/config';
 
 export default defineConfig({
-  schema: 'src/prisma/schema.prisma',
-  migrations: {
-    path: 'src/prisma/migrations',
-    seed: 'tsx src/prisma/seeds/main.ts',
-  },
+	schema: 'src/prisma/schema.prisma',
+	migrations: {
+		path: 'src/prisma/migrations',
+		seed: 'tsx src/prisma/seeds/main.ts',
+	},
 
-  datasource: {
-    url: env('PRODUCTION_DATABASE_URL'),
-  },
+	datasource: {
+		url: env('PROD_DB_URL'),
+	},
 });

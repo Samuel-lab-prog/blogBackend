@@ -1,5 +1,8 @@
 import * as s from './schemas';
-import type { PostCreateInput, PostUpdateInput } from '@prisma/generated/models';
+import type {
+	PostCreateInput,
+	PostUpdateInput,
+} from '@prisma/generated/models';
 import type { Prisma } from '@prisma/generated/client';
 //Schema-derived types
 export type PostNewPost = (typeof s.postNewPost)['static'];
@@ -10,8 +13,10 @@ export type PostPreview = (typeof s.postPreviewSchema)['static'];
 export type PostMinimalData = (typeof s.minimalPostSchema)['static'];
 
 export type PaginatedFullPosts = (typeof s.paginatedPostsFullSchema)['static'];
-export type PaginatedPostsPreview = (typeof s.paginatedPostsPreviewSchema)['static'];
-export type PaginatedMinimalPosts = (typeof s.paginatedPostsMinimalSchema)['static'];
+export type PaginatedPostsPreview =
+	(typeof s.paginatedPostsPreviewSchema)['static'];
+export type PaginatedMinimalPosts =
+	(typeof s.paginatedPostsMinimalSchema)['static'];
 
 export type PostStatus = (typeof s.fullPostSchema.properties.status)['static'];
 
@@ -22,10 +27,10 @@ export type OrderBy = (typeof s.orderBySchema)['static'];
 export type OrderDirection = (typeof s.orderDirectionSchema)['static'];
 
 export type PostSearchOptions = {
-  cursor?: number;
-  limit?: number;
-  orderBy?: OrderBy;
-  orderDirection?: OrderDirection;
+	cursor?: number;
+	limit?: number;
+	orderBy?: OrderBy;
+	orderDirection?: OrderDirection;
 };
 
 // Input aliases
@@ -34,82 +39,84 @@ export type UpdatePost = PostUpdateInput;
 
 //Prisma selects
 export const fullPostSelect = {
-  id: true,
-  title: true,
-  slug: true,
-  content: true,
-  excerpt: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
-  tags: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
+	id: true,
+	title: true,
+	slug: true,
+	content: true,
+	excerpt: true,
+	status: true,
+	createdAt: true,
+	updatedAt: true,
+	tags: {
+		select: {
+			id: true,
+			name: true,
+		},
+	},
 };
 
 export const postPreviewSelect = {
-  id: true,
-  title: true,
-  slug: true,
-  excerpt: true,
-  createdAt: true,
-  updatedAt: true,
-  tags: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
+	id: true,
+	title: true,
+	slug: true,
+	excerpt: true,
+	createdAt: true,
+	updatedAt: true,
+	tags: {
+		select: {
+			id: true,
+			name: true,
+		},
+	},
 };
 
 export const postMinimalSelect = {
-  id: true,
-  title: true,
+	id: true,
+	title: true,
 };
 
 // Prisma payload types
 export type FullPostRow = Prisma.PostGetPayload<{
-  select: typeof fullPostSelect;
+	select: typeof fullPostSelect;
 }>;
 
 export type PostPreviewRow = Prisma.PostGetPayload<{
-  select: typeof postPreviewSelect;
+	select: typeof postPreviewSelect;
 }>;
 
 // Domain identifiers
-export type PostUniqueKey = { type: 'id'; id: number } | { type: 'slug'; slug: string };
+export type PostUniqueKey =
+	| { type: 'id'; id: number }
+	| { type: 'slug'; slug: string };
 
 // Domain filters
 export type SelectPostsFilter = {
-  selectBy?: PostUniqueKey;
-  deleted?: 'exclude' | 'only';
-  status?: 'published' | 'draft';
-  tag?: string;
+	selectBy?: PostUniqueKey;
+	deleted?: 'exclude' | 'only';
+	status?: 'published' | 'draft';
+	tag?: string;
 };
 
 export type TagFilter = {
-  nameContains?: string;
-  includeFromDrafts?: boolean;
-  includeFromDeleted?: boolean;
+	nameContains?: string;
+	includeFromDrafts?: boolean;
+	includeFromDeleted?: boolean;
 };
 
 // High-level options
 export type SelectPostsOptions = {
-  filter?: SelectPostsFilter;
-  searchOptions?: PostSearchOptions;
+	filter?: SelectPostsFilter;
+	searchOptions?: PostSearchOptions;
 };
 
 // Data mapping helpers
 export type PostDataType = {
-  full: FullPost;
-  minimal: PostMinimalData;
-  preview: PostPreview;
+	full: FullPost;
+	minimal: PostMinimalData;
+	preview: PostPreview;
 };
 
 export type NormalizedPostsSearchOptions = Required<
-  Pick<PostSearchOptions, 'limit' | 'orderBy' | 'orderDirection'>
+	Pick<PostSearchOptions, 'limit' | 'orderBy' | 'orderDirection'>
 > &
-  Pick<PostSearchOptions, 'cursor'>;
+	Pick<PostSearchOptions, 'cursor'>;

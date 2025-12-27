@@ -1,8 +1,8 @@
 {
-  "directory": "./src/utils",
-  "exclude": [".*\\.test\\.ts$"],
-  "singleQuotes": true,
-  "delete": true,
-  "name": "index",
-  "location": "all"
+	"directory": "./src/utils",
+	"exclude": [".*\\.test\\.ts$"],
+	"singleQuotes": true,
+	"delete": true,
+	"name": "index",
+	"location": "all"
 }

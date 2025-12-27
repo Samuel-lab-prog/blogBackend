@@ -14,40 +14,40 @@ const HOST_NAME = process.env.HOST_NAME || 'localhost';
 const PORT = Number(process.env.PORT) || 3000;
 
 const OPEN_API_SETTINGS = {
-  path: '/docs',
-  documentation: {
-    info: {
-      title: 'Blog API',
-      description: 'API documentation for Blog API',
-      version: '1.0.0',
-    },
-  },
-  references: fromTypes(),
+	path: '/docs',
+	documentation: {
+		info: {
+			title: 'Blog API',
+			description: 'API documentation for Blog API',
+			version: '1.0.0',
+		},
+	},
+	references: fromTypes(),
 };
 
 const ELYSIA_SETTINGS = {
-  adapter: BunAdapter,
-  name: INSTANCE_NAME,
-  prefix: PREFIX,
-  sanitize: (value: string) => sanitize(value),
-  serve: {
-    hostname: HOST_NAME,
-    port: PORT,
-  },
+	adapter: BunAdapter,
+	name: INSTANCE_NAME,
+	prefix: PREFIX,
+	sanitize: (value: string) => sanitize(value),
+	serve: {
+		hostname: HOST_NAME,
+		port: PORT,
+	},
 };
 
 export const server = new Elysia(ELYSIA_SETTINGS)
-  .use(cors())
-  .use(LoggerPlugin)
-  .use(ErrorPlugin)
-  .use(
-    rateLimit({
-      max: 1000,
-      duration: 15 * 60 * 1000,
-      skip: () => process.env.NODE_ENV === 'test',
-    })
-  )
-  .use(authRouter)
-  .use(postsRouter)
-  .use(openapi(OPEN_API_SETTINGS))
-  .listen({ hostname: HOST_NAME, port: PORT });
+	.use(cors())
+	.use(LoggerPlugin)
+	.use(ErrorPlugin)
+	.use(
+		rateLimit({
+			max: 1000,
+			duration: 15 * 60 * 1000,
+			skip: () => process.env.NODE_ENV === 'test',
+		}),
+	)
+	.use(authRouter)
+	.use(postsRouter)
+	.use(openapi(OPEN_API_SETTINGS))
+	.listen({ hostname: HOST_NAME, port: PORT });
