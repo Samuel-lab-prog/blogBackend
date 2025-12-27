@@ -37,7 +37,16 @@ const ELYSIA_SETTINGS = {
 };
 
 export const server = new Elysia(ELYSIA_SETTINGS)
-	.use(cors())
+	.use(cors({
+		origin: [
+			'https://blog-frontend-gamma-vert.vercel.app',
+			'https://samuelsblog.xyz',
+			'http://localhost:5173',
+			'http://localhost:5174',
+		],
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+		credentials: true,
+	}))
 	.use(LoggerPlugin)
 	.use(ErrorPlugin)
 	.use(
