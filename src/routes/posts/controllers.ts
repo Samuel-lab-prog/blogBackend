@@ -15,7 +15,6 @@ import {
 } from './schemas';
 import { parsePostKey } from './model/types.ts';
 
-
 export const postsRouter = new Elysia({ prefix: '/posts' })
 	.as('scoped')
 	.get(
