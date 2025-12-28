@@ -2,19 +2,25 @@
 import Elysia from 'elysia';
 import { AppError } from '../AppError.ts';
 import { log } from '../logger.ts';
-import { SetupPlugin } from './setupPlugin.ts';
+import { SetupPlugin, type SetupPluginType } from './setupPlugin.ts';
 
-export function handleError(
+function handleError(
 	set: any,
 	error: unknown,
 	code: any,
-	reqId: string,
 	request: Request,
+	store: SetupPluginType,
 ) {
 	const isAppError = error instanceof AppError;
 
 	const path = request.url.substring(request.url.indexOf('/', 8));
 	const method = request.method;
+	const reqId = store.reqId;
+	const authTiming = store.authTiming;
+	const userId = store.userId;
+	const role = store.role;
+	const totalTiming = performance.now() - store.reqInitiatedAt;
+
 	let status = undefined;
 	let message = undefined;
 
@@ -26,6 +32,10 @@ export function handleError(
 		log.error(
 			{
 				reqId,
+				authTiming,
+				userId,
+				role,
+				totalTiming,
 				path,
 				method,
 				status,
@@ -43,7 +53,7 @@ export function handleError(
 		normalizedCode = 'UNKNOWN';
 	}
 
-	const converted = convertElysiaError(normalizedCode);
+	const converted = convertElysiaError(normalizedCode, error);
 	status = converted.statusCode;
 	message = converted.errorMessages.join('; ');
 	set.status = status;
@@ -51,6 +61,10 @@ export function handleError(
 	log.error(
 		{
 			reqId,
+			authTiming,
+			userId,
+			role,
+			totalTiming,
 			path,
 			method,
 			status,
@@ -68,39 +82,50 @@ function sendAppError(err: AppError) {
 	};
 }
 
-function convertElysiaError(code: string): AppError {
+function convertElysiaError(code: string, error: unknown): AppError {
+	const originalErrorMessage =
+		error instanceof Error ? error.message : 'No error message available';
 	switch (code) {
 		case 'NOT_FOUND':
 			return new AppError({
 				statusCode: 404,
-				errorMessages: ['Not Found: resource not found'],
+				errorMessages: ['Not Found: resource not found', originalErrorMessage],
 			});
 		case 'PARSE':
 			return new AppError({
 				statusCode: 400,
-				errorMessages: ['Bad request: failed to parse request body'],
+				errorMessages: [
+					'Bad request: failed to parse request body',
+					originalErrorMessage,
+				],
 			});
 		case 'VALIDATION':
 			return new AppError({
 				statusCode: 422,
-				errorMessages: ['Unprocessable entity: validation failed'],
+				errorMessages: [
+					'Unprocessable entity: validation failed',
+					originalErrorMessage,
+				],
 			});
 		case 'INVALID_COOKIE_SIGNATURE':
 			return new AppError({
 				statusCode: 401,
-				errorMessages: ['Unauthorized: invalid cookie signature'],
+				errorMessages: [
+					'Unauthorized: invalid cookie signature',
+					originalErrorMessage,
+				],
 			});
 		case 'INVALID_FILE_TYPE':
 			return new AppError({
 				statusCode: 400,
-				errorMessages: ['Bad request: invalid file type'],
+				errorMessages: ['Bad request: invalid file type', originalErrorMessage],
 			});
 		case 'INTERNAL_SERVER_ERROR':
 		case 'UNKNOWN':
 		default:
 			return new AppError({
 				statusCode: 500,
-				errorMessages: ['Internal server error'],
+				errorMessages: ['Internal server error', originalErrorMessage],
 			});
 	}
 }
@@ -108,5 +133,5 @@ function convertElysiaError(code: string): AppError {
 export const ErrorPlugin = new Elysia()
 	.use(SetupPlugin)
 	.onError({ as: 'scoped' }, ({ error, set, code, store, request }) =>
-		handleError(set, error, code, store.reqId, request),
+		handleError(set, error, code, request, store),
 	);

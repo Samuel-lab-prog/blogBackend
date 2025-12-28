@@ -7,3 +7,11 @@ export const SetupPlugin = new Elysia()
 	.state('reqInitiatedAt', 0)
 	.state('authTiming', 0) // This is being instanciated in login and authPlugin
 	.state('reqId', '');
+
+export type SetupPluginType = {
+	userId: number | null;
+	role: 'guest' | 'admin';
+	reqInitiatedAt: number;
+	authTiming: number;
+	reqId: string;
+};
