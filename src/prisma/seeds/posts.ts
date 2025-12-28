@@ -1,4 +1,4 @@
-import * as t from '../../routes/posts/types';
+import * as t from '../../routes/posts/model/types';
 import { prisma } from '../client';
 
 const posts: t.InsertPost[] = [];
