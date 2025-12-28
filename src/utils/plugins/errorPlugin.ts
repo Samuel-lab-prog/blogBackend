@@ -22,10 +22,13 @@ function handleError(
 	const isAuthenticated = !!userId;
 	const totalMs = performance.now() - store.reqInitiatedAt;
 
-	let status = undefined;
+	let status,
+		message = undefined;
 
 	if (isAppError) {
 		status = (error as AppError).statusCode;
+		message = (error as AppError).message;
+
 		set.status = status;
 
 		log.error(
@@ -37,6 +40,7 @@ function handleError(
 				},
 				response: {
 					status,
+					message,
 				},
 				auth: {
 					isAuthenticated,
@@ -62,6 +66,7 @@ function handleError(
 
 	const converted = convertElysiaError(normalizedCode, error);
 	status = converted.statusCode;
+	message = converted.message;
 	set.status = status;
 
 	log.error(
@@ -73,6 +78,7 @@ function handleError(
 			},
 			response: {
 				status,
+				message,
 			},
 			auth: {
 				isAuthenticated,
