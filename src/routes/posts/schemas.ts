@@ -1,6 +1,5 @@
 import { t } from 'elysia';
 import type { OrderBy, OrderDirection } from './model/types';
-import type { AssertExtends } from './model/asserts.ts';
 import { idSchema, dateSchema, makeValidationError } from '@utils';
 
 export const postStatusSchema = t.UnionEnum(['published', 'draft'], {
@@ -138,12 +137,11 @@ export const orderBySchema = t.Union([
 	t.Literal('id'),
 	t.Literal('title'),
 ]);
+type _AssertExtends<_T extends _U, _U> = true;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type AssertOrderBy = AssertExtends<(typeof orderBySchema)['static'], OrderBy>;
+type _AssertOrderBy = _AssertExtends<(typeof orderBySchema)['static'], OrderBy>;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type AssertOrderDirection = AssertExtends<
+type _AssertOrderDirection = _AssertExtends<
 	(typeof orderDirectionSchema)['static'],
 	OrderDirection
 >;

@@ -1,10 +1,15 @@
 import { prisma } from '@prisma/client';
 import { withPrismaErrorHandling } from '@utils';
-import type { PostSelect, PostWhereInput } from '@prisma/generated/models';
+import type {
+	PostSelect,
+	PostWhereInput,
+	TagWhereInput,
+} from '@prisma/generated/models';
 import type {
 	SelectPostsFilter,
 	SelectPostsOptions,
 	NormalizedPostsSearchOptions,
+	NormalizedTagFilter,
 	InsertPost,
 	UpdatePost,
 	TagFilter,
@@ -22,7 +27,13 @@ import {
 	fullPostSelect,
 } from './model/prisma.ts';
 
-export async function insertPost(data: InsertPost): Promise<{ id: number }> {
+const postSelectMap = {
+	preview: postPreviewSelect,
+	minimal: postMinimalSelect,
+	full: fullPostSelect,
+} satisfies Record<keyof PostDataType, PostSelect>;
+
+export function insertPost(data: InsertPost): Promise<{ id: number }> {
 	return withPrismaErrorHandling<{ id: number }>(() =>
 		prisma.post.create({
 			data,
@@ -39,9 +50,8 @@ export async function selectPosts<T extends keyof PostDataType>(
 	nextCursor?: number;
 	hasMore: boolean;
 }> {
-	const { cursor, limit, orderBy, orderDirection } = normalizeSearchOptions(
-		options.searchOptions,
-	);
+	const { cursor, limit, orderBy, orderDirection } =
+		normalizePostsSearchOptions(options.searchOptions);
 	const where = buildPostsWhereClause(options.filter);
 
 	const posts = await withPrismaErrorHandling(() =>
@@ -64,11 +74,11 @@ export async function selectPosts<T extends keyof PostDataType>(
 	};
 }
 
-export async function selectPost(
+export function selectPost(
 	filter: SelectPostsFilter,
 ): Promise<FullPost | null> {
 	const where = buildPostsWhereClause(filter);
-	return await withPrismaErrorHandling<FullPost | null>(() =>
+	return withPrismaErrorHandling<FullPost | null>(() =>
 		prisma.post.findFirst({
 			where,
 			select: postSelectMap['full'] as PostSelect,
@@ -78,29 +88,18 @@ export async function selectPost(
 
 // Need to refactor this later
 export function selectTags(tagFilter?: TagFilter): Promise<TagType[]> {
-	const nameContains = tagFilter?.nameContains ?? undefined;
-	const includeFromDrafts = tagFilter?.includeFromDrafts ?? false;
-	const includeFromDeleted = tagFilter?.includeFromDeleted ?? false;
+	const normalizedFilter = normalizeTagFilter(tagFilter);
+	const where = buildTagsWhereClause(normalizedFilter);
 
 	return withPrismaErrorHandling<TagType[]>(() =>
 		prisma.tag.findMany({
 			orderBy: { name: 'asc' },
-			where: {
-				...(nameContains && {
-					name: { contains: nameContains, mode: 'insensitive' },
-				}),
-				posts: {
-					some: {
-						...(includeFromDrafts === false && { status: 'published' }),
-						...(includeFromDeleted === false && { deletedAt: null }),
-					},
-				},
-			},
+			where,
 		}),
 	);
 }
 
-export async function updatePost(
+export function updatePost(
 	key: PostUniqueKey,
 	data: UpdatePost,
 ): Promise<{ id: number }> {
@@ -115,12 +114,6 @@ export async function updatePost(
 	);
 }
 
-const postSelectMap = {
-	preview: postPreviewSelect,
-	minimal: postMinimalSelect,
-	full: fullPostSelect,
-} satisfies Record<keyof PostDataType, PostSelect>;
-
 function buildPostsWhereClause(filter: SelectPostsFilter = {}): PostWhereInput {
 	const where: PostWhereInput = {};
 
@@ -132,6 +125,8 @@ function buildPostsWhereClause(filter: SelectPostsFilter = {}): PostWhereInput {
 
 			case 'slug':
 				where.slug = filter.selectBy.slug;
+				break;
+			default:
 				break;
 		}
 	}
@@ -159,7 +154,7 @@ function buildPostsWhereClause(filter: SelectPostsFilter = {}): PostWhereInput {
 	return where;
 }
 
-function normalizeSearchOptions(
+function normalizePostsSearchOptions(
 	options: PostSearchOptions = {},
 ): NormalizedPostsSearchOptions {
 	return {
@@ -167,5 +162,34 @@ function normalizeSearchOptions(
 		limit: options.limit ?? 10,
 		orderBy: options.orderBy ?? 'createdAt',
 		orderDirection: options.orderDirection ?? 'desc',
+	};
+}
+
+function normalizeTagFilter(filter?: TagFilter): NormalizedTagFilter {
+	return {
+		nameContains: filter?.nameContains,
+		includeFromDrafts: filter?.includeFromDrafts ?? false,
+		includeFromDeleted: filter?.includeFromDeleted ?? false,
+	};
+}
+
+function buildTagsWhereClause(filter: NormalizedTagFilter): TagWhereInput {
+	return {
+		...(filter.nameContains && {
+			name: {
+				contains: filter.nameContains,
+				mode: 'insensitive',
+			},
+		}),
+		posts: {
+			some: {
+				...(filter.includeFromDrafts === false && {
+					status: 'published',
+				}),
+				...(filter.includeFromDeleted === false && {
+					deletedAt: null,
+				}),
+			},
+		},
 	};
 }

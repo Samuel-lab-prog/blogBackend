@@ -63,7 +63,7 @@ export const LoggerPlugin = new Elysia()
 	);
 
 function getResponseSize(response: unknown): number {
-	if (response == null) return 0;
+	if (response === null) return 0;
 
 	if (typeof response === 'string') {
 		return Buffer.byteLength(response);

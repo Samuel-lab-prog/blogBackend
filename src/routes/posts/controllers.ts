@@ -19,7 +19,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 	.as('scoped')
 	.get(
 		'/',
-		async ({ query }) => {
+		({ query }) => {
 			const { cursor, limit, orderBy, orderDirection, ...filter } = query;
 			return services.fetchPostsPreviews(filter, {
 				cursor,
@@ -51,7 +51,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 
 	.get(
 		'/:id',
-		async ({ params }) => {
+		({ params }) => {
 			return services.fetchPost(parsePostKey(params.id));
 		},
 		{
@@ -72,7 +72,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 
 	.get(
 		'/tags',
-		async ({ query }) => {
+		({ query }) => {
 			return services.fetchTags({
 				nameContains: query.nameContains,
 				includeFromDeleted: query.deleted,
@@ -99,7 +99,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 	.use(authPlugin)
 	.post(
 		'/',
-		async ({ body, set }) => {
+		({ body, set }) => {
 			set.status = 201;
 			return services.registerPost(body);
 		},
@@ -120,7 +120,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 	)
 	.get(
 		'/minimal',
-		async ({ query }) => {
+		({ query }) => {
 			const { deleted, status, tag, ...rest } = query;
 			if (deleted !== undefined) {
 				if (deleted !== 'only' && deleted !== 'exclude') {
@@ -163,7 +163,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 	)
 	.delete(
 		'/:id',
-		async ({ params }) => {
+		({ params }) => {
 			return services.softRemovePost(parsePostKey(params.id));
 		},
 		{
@@ -184,7 +184,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 	)
 	.patch(
 		'/:id',
-		async ({ params, body }) => {
+		({ params, body }) => {
 			log.info({ body }, 'Patching post with data');
 			return services.modifyPost(parsePostKey(params.id), body);
 		},
@@ -209,7 +209,7 @@ export const postsRouter = new Elysia({ prefix: '/posts' })
 	)
 	.patch(
 		'/:id/restore',
-		async ({ params }) => {
+		({ params }) => {
 			return services.restoreDeletedPost(parsePostKey(params.id));
 		},
 		{

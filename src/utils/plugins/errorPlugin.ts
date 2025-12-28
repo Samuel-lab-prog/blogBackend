@@ -4,97 +4,72 @@ import { AppError } from '../AppError.ts';
 import { log } from '../logger.ts';
 import { SetupPlugin, type SetupPluginType } from './setupPlugin.ts';
 
-function handleError(
-	set: any,
-	error: unknown,
-	code: any,
-	request: Request,
-	store: SetupPluginType,
+function normalizeError(code: unknown, error: unknown): AppError {
+	if (error instanceof AppError) {
+		return error;
+	}
+
+	const normalizedCode = typeof code === 'string' ? code : 'UNKNOWN';
+	return convertElysiaError(normalizedCode, error);
+}
+
+function logError(
+	context: ReturnType<typeof buildErrorContext>,
+	status: number,
+	message: string,
 ) {
-	const isAppError = error instanceof AppError;
-
-	const path = request.url.substring(request.url.indexOf('/', 8));
-	const method = request.method;
-	const reqId = store.reqId;
-	const authMs = store.authTiming;
-	const userId = store.userId;
-	const role = store.role;
-	const isAuthenticated = !!userId;
-	const totalMs = performance.now() - store.reqInitiatedAt;
-
-	let status,
-		message = undefined;
-
-	if (isAppError) {
-		status = (error as AppError).statusCode;
-		message = (error as AppError).message;
-
-		set.status = status;
-
-		log.error(
-			{
-				request: {
-					reqId,
-					method,
-					path,
-				},
-				response: {
-					status,
-					message,
-				},
-				auth: {
-					isAuthenticated,
-					userId,
-					role,
-				},
-				timings: {
-					totalMs,
-					authMs,
-				},
-			},
-			'An error occurred while processing the request',
-		);
-
-		return sendAppError(error);
-	}
-
-	let normalizedCode = code;
-
-	if (typeof normalizedCode !== 'string') {
-		normalizedCode = 'UNKNOWN';
-	}
-
-	const converted = convertElysiaError(normalizedCode, error);
-	status = converted.statusCode;
-	message = converted.message;
-	set.status = status;
-
 	log.error(
 		{
-			request: {
-				reqId,
-				method,
-				path,
-			},
+			...context,
 			response: {
 				status,
 				message,
 			},
-			auth: {
-				isAuthenticated,
-				userId,
-				role,
-			},
-			timings: {
-				totalMs,
-				authMs,
-			},
 		},
 		'An error occurred while processing the request',
 	);
-
-	return sendAppError(converted);
 }
+
+function buildErrorContext(request: Request, store: SetupPluginType) {
+	const path = request.url.substring(request.url.indexOf('/', 8));
+
+	return {
+		request: {
+			reqId: store.reqId,
+			method: request.method,
+			path,
+		},
+		auth: {
+			isAuthenticated: !!store.userId,
+			userId: store.userId,
+			role: store.role,
+		},
+		timings: {
+			totalMs: performance.now() - store.reqInitiatedAt,
+			authMs: store.authTiming,
+		},
+	};
+}
+
+type HandleErrorContext = {
+	set: any;
+	error: unknown;
+	code: unknown;
+	request: Request;
+	store: SetupPluginType;
+};
+
+function handleError({ set, error, code, request, store }: HandleErrorContext) {
+	const appError = normalizeError(code, error);
+	const context = buildErrorContext(request, store);
+
+	set.status = appError.statusCode;
+
+	logError(context, appError.statusCode, appError.message);
+
+	return sendAppError(appError);
+}
+
 function sendAppError(err: AppError) {
 	return {
 		errorMessages: err.errorMessages,
@@ -152,6 +127,4 @@ function convertElysiaError(code: string, error: unknown): AppError {
 
 export const ErrorPlugin = new Elysia()
 	.use(SetupPlugin)
-	.onError({ as: 'scoped' }, ({ error, set, code, store, request }) =>
-		handleError(set, error, code, request, store),
-	);
+	.onError({ as: 'scoped' }, (ctx) => handleError(ctx));

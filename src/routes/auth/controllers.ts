@@ -1,7 +1,14 @@
-import { Elysia, t } from 'elysia';
-import { appErrorSchema, loginSchema } from '@utils';
-import { authPlugin, SetupPlugin } from '@utils';
+import { Elysia, t, type CookieOptions } from 'elysia';
+import { appErrorSchema, loginSchema, authPlugin, SetupPlugin } from '@utils';
 import { loginUser } from './services';
+
+function setUpCookieTokenOptions(token: CookieOptions) {
+	token.httpOnly = true;
+	token.path = '/';
+	token.maxAge = 60 * 60 * 24 * 7;
+	token.secure = process.env.NODE_ENV === 'prod';
+	token.sameSite = 'none';
+}
 
 export const authRouter = new Elysia().group('/auth', (app) =>
 	app
@@ -10,23 +17,15 @@ export const authRouter = new Elysia().group('/auth', (app) =>
 			'/login',
 			async ({ body, cookie, set, store }) => {
 				const authInitiated = performance.now();
-
 				const result = await loginUser(body.email, body.password);
 
 				cookie.token!.value = result.token;
-				cookie.token!.httpOnly = true;
-				cookie.token!.path = '/';
-				cookie.token!.maxAge = 60 * 60 * 24 * 7; // 7 days
-				cookie.token!.secure = process.env.NODE_ENV === 'production';
-				cookie.token!.sameSite = 'none';
+				setUpCookieTokenOptions(cookie.token!);
 
 				set.status = 204;
-
 				store.userId = result.data.id;
 				store.role = 'admin';
 				store.authTiming = Math.round(performance.now() - authInitiated);
-
-				return;
 			},
 			{
 				body: loginSchema,
@@ -49,9 +48,7 @@ export const authRouter = new Elysia().group('/auth', (app) =>
 		.post(
 			'',
 			({ set }) => {
-				// Dummy route to apply authPlugin
 				set.status = 204;
-				return;
 			},
 			{
 				response: {

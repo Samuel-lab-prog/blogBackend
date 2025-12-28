@@ -15,9 +15,9 @@ const data = [
 	},
 ];
 
-export default async function seedUsers() {
+export default function seedUsers() {
 	for (const user of data) {
-		await prisma.user.upsert({
+		prisma.user.upsert({
 			where: { email: user.email },
 			update: {},
 			create: user,

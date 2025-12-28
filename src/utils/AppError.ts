@@ -170,9 +170,8 @@ function handlePrismaError<T>(
 			break;
 
 		case 'P2025':
-			{
-				throwNotFoundError(`${table} not found`);
-			}
+			throwNotFoundError(`${table} not found`);
+
 			break;
 		default:
 			throw error;

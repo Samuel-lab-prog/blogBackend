@@ -82,3 +82,9 @@ export type NormalizedPostsSearchOptions = Required<
 	Pick<PostSearchOptions, 'limit' | 'orderBy' | 'orderDirection'>
 > &
 	Pick<PostSearchOptions, 'cursor'>;
+
+export type NormalizedTagFilter = {
+	nameContains?: string;
+	includeFromDrafts: boolean;
+	includeFromDeleted: boolean;
+};

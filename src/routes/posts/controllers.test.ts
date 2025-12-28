@@ -45,7 +45,7 @@ function postFactory(
 	};
 }
 
-async function createPost(
+function createPost(
 	overrides?: Partial<Parameters<typeof prisma.post.create>[0]['data']>,
 ) {
 	return prisma.post.create({

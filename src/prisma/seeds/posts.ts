@@ -49,9 +49,9 @@ We hope this article provides valuable insights into Topic ${i}. Keep exploring 
 	});
 }
 
-export default async function seedPosts() {
+export default function seedPosts() {
 	for (const post of posts) {
-		await prisma.post.upsert({
+		prisma.post.upsert({
 			where: { slug: post.slug },
 			update: {},
 			create: post,

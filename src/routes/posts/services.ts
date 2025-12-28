@@ -23,7 +23,7 @@ import type {
 import { throwNotFoundError } from '@utils';
 import slugify from 'slugify';
 
-export async function registerPost(body: PostNewPost): Promise<{ id: number }> {
+export function registerPost(body: PostNewPost): Promise<{ id: number }> {
 	const slug = slugify(body.title, { lower: true, strict: true });
 	const { tags, ...postData } = body;
 
@@ -56,11 +56,11 @@ export async function fetchPost(key: PostUniqueKey): Promise<FullPost> {
 
 // Only allowing tags here. User shoud not be able to filter by draft/deleted/status
 // These filters will be used only in the admin routes
-export async function fetchPostsPreviews(
+export function fetchPostsPreviews(
 	filter: { tag?: string },
 	searchOptions: PostSearchOptions,
 ): Promise<PaginatedPostsPreview> {
-	return await selectPosts({
+	return selectPosts({
 		filter: {
 			deleted: 'exclude',
 			status: 'published',
@@ -83,7 +83,7 @@ export async function fetchPostsMinimal(
 	return data;
 }
 
-export async function modifyPost(
+export function modifyPost(
 	key: PostUniqueKey,
 	data: PatchPost,
 ): Promise<{ id: number }> {
@@ -124,18 +124,16 @@ export async function modifyPost(
 	return updatePost(key, prismaData);
 }
 
-export async function softRemovePost(
-	key: PostUniqueKey,
-): Promise<{ id: number }> {
+export function softRemovePost(key: PostUniqueKey): Promise<{ id: number }> {
 	return updatePost(key, { deletedAt: new Date() });
 }
 
-export async function restoreDeletedPost(
+export function restoreDeletedPost(
 	key: PostUniqueKey,
 ): Promise<{ id: number }> {
 	return updatePost(key, { deletedAt: null });
 }
 
-export async function fetchTags(filter?: TagFilter): Promise<TagType[]> {
+export function fetchTags(filter?: TagFilter): Promise<TagType[]> {
 	return selectTags(filter);
 }
