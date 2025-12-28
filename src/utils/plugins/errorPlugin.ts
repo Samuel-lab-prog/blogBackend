@@ -16,30 +16,37 @@ function handleError(
 	const path = request.url.substring(request.url.indexOf('/', 8));
 	const method = request.method;
 	const reqId = store.reqId;
-	const authTiming = store.authTiming;
+	const authMs = store.authTiming;
 	const userId = store.userId;
 	const role = store.role;
-	const totalTiming = performance.now() - store.reqInitiatedAt;
+	const isAuthenticated = !!userId;
+	const totalMs = performance.now() - store.reqInitiatedAt;
 
 	let status = undefined;
-	let message = undefined;
 
 	if (isAppError) {
 		status = (error as AppError).statusCode;
-		message = (error as AppError).errorMessages.join('; ');
 		set.status = status;
 
 		log.error(
 			{
-				reqId,
-				authTiming,
-				userId,
-				role,
-				totalTiming,
-				path,
-				method,
-				status,
-				message,
+				request: {
+					reqId,
+					method,
+					path,
+				},
+				response: {
+					status,
+				},
+				auth: {
+					isAuthenticated,
+					userId,
+					role,
+				},
+				timings: {
+					totalMs,
+					authMs,
+				},
 			},
 			'An error occurred while processing the request',
 		);
@@ -55,20 +62,27 @@ function handleError(
 
 	const converted = convertElysiaError(normalizedCode, error);
 	status = converted.statusCode;
-	message = converted.errorMessages.join('; ');
 	set.status = status;
 
 	log.error(
 		{
-			reqId,
-			authTiming,
-			userId,
-			role,
-			totalTiming,
-			path,
-			method,
-			status,
-			message,
+			request: {
+				reqId,
+				method,
+				path,
+			},
+			response: {
+				status,
+			},
+			auth: {
+				isAuthenticated,
+				userId,
+				role,
+			},
+			timings: {
+				totalMs,
+				authMs,
+			},
 		},
 		'An error occurred while processing the request',
 	);
