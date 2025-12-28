@@ -15,20 +15,8 @@ export default defineConfig([
 			},
 		},
 		rules: {
-			'no-unused-vars': 'off',
-			'@typescript-eslint/no-unused-vars': [
-				'warn',
-				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-			],
-			'no-use-before-define': 'off',
-			'@typescript-eslint/no-use-before-define': [
-				'error',
-				{
-					functions: false,
-					classes: true,
-					variables: true,
-				},
-			],
+			'no-var': 'error',
+			'prefer-const': 'error',
 			'no-await-in-loop': 'error',
 			'no-constructor-return': 'error',
 			'no-duplicate-imports': 'error',
@@ -58,6 +46,14 @@ export default defineConfig([
 			'max-lines-per-function': 'off',
 			'max-nested-callbacks': 'off',
 			'max-params': 'off',
+		},
+	},
+	{
+		files: ['**/*asserts.ts'],
+		rules: {
+			'max-lines': 'off',
+			'max-lines-per-function': 'off',
+			'@typescript-eslint/no-unused-vars': 'off',
 		},
 	},
 ]);

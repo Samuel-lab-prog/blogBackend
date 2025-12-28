@@ -1,6 +1,9 @@
 import { Elysia, t, type CookieOptions } from 'elysia';
-import { appErrorSchema, loginSchema, authPlugin, SetupPlugin } from '@utils';
 import { loginUser } from './services';
+import { authPlugin } from '../../utils/plugins/authPlugin';
+import { SetupPlugin } from '../../utils/plugins/setupPlugin';
+import { appErrorSchema } from '../../utils/AppError';
+import { loginSchema } from '../../utils/schemas.ts';
 
 function setUpCookieTokenOptions(token: CookieOptions) {
 	token.httpOnly = true;

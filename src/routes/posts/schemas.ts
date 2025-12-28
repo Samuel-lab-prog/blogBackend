@@ -1,5 +1,4 @@
 import { t } from 'elysia';
-import type { OrderBy, OrderDirection } from './model/types';
 import { idSchema, dateSchema, makeValidationError } from '@utils';
 
 export const postStatusSchema = t.UnionEnum(['published', 'draft'], {
@@ -137,11 +136,3 @@ export const orderBySchema = t.Union([
 	t.Literal('id'),
 	t.Literal('title'),
 ]);
-type _AssertExtends<_T extends _U, _U> = true;
-
-type _AssertOrderBy = _AssertExtends<(typeof orderBySchema)['static'], OrderBy>;
-
-type _AssertOrderDirection = _AssertExtends<
-	(typeof orderDirectionSchema)['static'],
-	OrderDirection
->;

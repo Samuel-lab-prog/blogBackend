@@ -4,14 +4,13 @@
 	"type": "module",
 	"private": true,
 	"devDependencies": {
-		"@elysiajs/cors": "^1.4.0",
-		"@elysiajs/openapi": "^1.4.11",
 		"@eslint/js": "^9.38.0",
 		"@types/bun": "latest",
 		"@types/jsonwebtoken": "^9.0.10",
 		"@types/node": "^24.10.1",
 		"@types/pg": "^8.15.6",
 		"barrelsby": "^2.8.1",
+		"dependency-cruiser": "^17.3.5",
 		"eslint": "^9.38.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-prettier": "^5.5.4",
@@ -40,9 +39,12 @@
 		"seed": "npx prisma db seed",
 		"reset": "npx prisma migrate reset --force",
 		"drop": "npx prisma db push --force-reset",
-		"barrels": "barrelsby --config barrels.config.json"
+		"barrels": "barrelsby --config barrels.config.json",
+		"check-deps": "npx dependency-cruiser src"
 	},
 	"dependencies": {
+		"@elysiajs/cors": "^1.4.1",
+		"@elysiajs/openapi": "^1.4.13",
 		"@prisma/adapter-pg": "^7.2.0",
 		"@prisma/client": "^7.2.0",
 		"bcryptjs": "^3.0.3",

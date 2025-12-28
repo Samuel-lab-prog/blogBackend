@@ -1,16 +1,14 @@
 import bcrypt from 'bcryptjs';
-import { generateToken, verifyToken, throwUnauthorizedError } from '@utils';
 import { selectUser } from '../users/repository';
 import { type UserRow } from '../users/types';
+import { generateToken, verifyToken } from '../../utils/jwt';
+import { throwUnauthorizedError } from '../../utils/AppError';
 
 export async function loginUser(
 	email: string,
 	password: string,
 ): Promise<{ data: { id: number }; token: string }> {
 	const user = await selectUser({ email });
-	console.log('User found:', user);
-	console.log('Password provided:', password);
-	console.log('Stored hashed password:', user?.password);
 
 	if (user && (await bcrypt.compare(password, user.password))) {
 		return {
