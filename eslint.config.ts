@@ -17,7 +17,6 @@ export default defineConfig([
 		rules: {
 			'no-var': 'error',
 			'prefer-const': 'error',
-			'no-await-in-loop': 'error',
 			'no-constructor-return': 'error',
 			'no-duplicate-imports': 'error',
 			'no-self-compare': 'error',

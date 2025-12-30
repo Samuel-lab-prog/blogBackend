@@ -15,12 +15,14 @@ const data = [
 	},
 ];
 
-export default function seedUsers() {
-	for (const user of data) {
+export default async function seedUsers() {
+	const promises = data.map((user) =>
 		prisma.user.upsert({
 			where: { email: user.email },
 			update: {},
 			create: user,
-		});
-	}
+		}),
+	);
+
+	await Promise.all(promises);
 }

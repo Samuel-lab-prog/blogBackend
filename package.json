@@ -40,7 +40,8 @@
 		"reset": "npx prisma migrate reset --force",
 		"drop": "npx prisma db push --force-reset",
 		"barrels": "barrelsby --config barrels.config.json",
-		"check-deps": "npx dependency-cruiser src"
+		"check-deps": "npx dependency-cruiser src",
+		"check": "bun lint:fix && bun format:fix && bun test && bun barrels && bun check-deps"
 	},
 	"dependencies": {
 		"@elysiajs/cors": "^1.4.1",

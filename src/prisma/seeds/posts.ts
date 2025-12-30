@@ -2,7 +2,7 @@ import * as t from '../../routes/posts/model/types';
 import { prisma } from '../client';
 
 const posts: t.InsertPost[] = [];
-const POSTS_COUNT = 10;
+const POSTS_COUNT = 0;
 
 for (let i = 0; i < POSTS_COUNT; i++) {
 	posts.push({
@@ -48,13 +48,15 @@ We hope this article provides valuable insights into Topic ${i}. Keep exploring 
 		},
 	});
 }
-
-export default function seedPosts() {
-	for (const post of posts) {
+export default async function seedPosts() {
+	const promises = posts.map((post) =>
 		prisma.post.upsert({
 			where: { slug: post.slug },
 			update: {},
 			create: post,
-		});
-	}
+		}),
+	);
+
+	// espera todas serem resolvidas
+	await Promise.all(promises);
 }
