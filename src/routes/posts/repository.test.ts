@@ -26,12 +26,12 @@ describe('Post repository', () => {
 	});
 
 	describe('insertPost', () => {
-		it('should insert a post without tags and return only the id', async () => {
+		it('Should insert a post without tags and return only an object with an id', async () => {
 			const result = await insertPost(DEFAULT_POST);
 			expect(result.id).toBeTypeOf('number');
 		});
 
-		it('should insert a post with tags', async () => {
+		it('Should insert a post with tags and return only an object with an id', async () => {
 			const result = await insertPost({
 				...DEFAULT_POST,
 				tags: {
@@ -45,7 +45,7 @@ describe('Post repository', () => {
 			expect(result.id).toBeTypeOf('number');
 		});
 
-		it('default status should be published', async () => {
+		it('Default status should be published if not specified', async () => {
 			const result = await insertPost(DEFAULT_POST);
 			const dbPost = await prisma.post.findUnique({
 				where: { id: result.id },
@@ -54,7 +54,7 @@ describe('Post repository', () => {
 			expect(dbPost?.status).toBe('published');
 		});
 
-		it('should throw on duplicated slug', async () => {
+		it('Should throw when inserting a post with a duplicated slug', async () => {
 			insertPost(DEFAULT_POST);
 
 			await expect(insertPost(DEFAULT_POST)).rejects.toThrow(AppError);
@@ -62,14 +62,14 @@ describe('Post repository', () => {
 	});
 
 	describe('selectPost', () => {
-		it('should return null when no post found', async () => {
+		it('Should return null when no post found', async () => {
 			const post = await selectPost({
 				selectBy: { type: 'id', id: ABSURD_ID },
 			});
 			expect(post).toBeNull();
 		});
 
-		it('should return a post by id', async () => {
+		it('Should return a post by id correctly', async () => {
 			const created = await insertPost(DEFAULT_POST);
 			const post = await selectPost({
 				selectBy: { type: 'id', id: created.id },
@@ -79,7 +79,7 @@ describe('Post repository', () => {
 			expect(post?.title).toBe(DEFAULT_POST.title);
 		});
 
-		it('should return a post by slug', async () => {
+		it('Should return a post by slug correctly', async () => {
 			await insertPost(DEFAULT_POST);
 			const post = await selectPost({
 				selectBy: { type: 'slug', slug: DEFAULT_POST.slug },
@@ -90,7 +90,7 @@ describe('Post repository', () => {
 	});
 
 	describe('selectPosts', () => {
-		it('should return empty array if no match', async () => {
+		it('Should return empty array if no match', async () => {
 			const result = await selectPosts({
 				dataType: 'full',
 				filter: { selectBy: { type: 'id', id: ABSURD_ID } },
@@ -99,7 +99,7 @@ describe('Post repository', () => {
 			expect(result.posts).toHaveLength(0);
 		});
 
-		it('should return only drafts when configured', async () => {
+		it('Should return only drafts when configured', async () => {
 			await insertPost({
 				...DEFAULT_POST,
 				title: 'Published',
@@ -128,7 +128,7 @@ describe('Post repository', () => {
 			expect(result.posts[0]?.status).toBe('draft');
 		});
 
-		it('should return only deleted posts when configured', async () => {
+		it('Should return only deleted posts when configured', async () => {
 			const result = await selectPosts({
 				dataType: 'full',
 				filter: { deleted: 'only' },
@@ -137,7 +137,7 @@ describe('Post repository', () => {
 			expect(result.posts).toHaveLength(0);
 		});
 
-		it('should return a full post by id', async () => {
+		it('Should return a full post by id', async () => {
 			const created = await insertPost(DEFAULT_POST);
 
 			const result = await selectPosts({
@@ -148,7 +148,7 @@ describe('Post repository', () => {
 			expect(result.posts[0]?.title).toBe(DEFAULT_POST.title);
 		});
 
-		it('preview -> empty when no published posts', async () => {
+		it('Preview -> empty when no published posts', async () => {
 			const result = await selectPosts({
 				dataType: 'preview',
 				filter: {},
@@ -159,7 +159,7 @@ describe('Post repository', () => {
 			expect(result.nextCursor).toBeUndefined();
 		});
 
-		it('preview -> should return only published posts', async () => {
+		it('Should return only published posts if configured', async () => {
 			await insertPost({
 				...DEFAULT_POST,
 				title: 'Draft',
@@ -188,7 +188,7 @@ describe('Post repository', () => {
 			expect(result.posts[0]?.title).toBe('Published');
 		});
 
-		it('preview -> should filter by tag', async () => {
+		it('Should filter by tag correctly', async () => {
 			const tag = await prisma.tag.create({
 				data: { name: 'javascript' },
 			});
@@ -219,7 +219,7 @@ describe('Post repository', () => {
 			expect(result.posts[0]?.tags[0]?.name).toBe('javascript');
 		});
 
-		it('should paginate with cursor', async () => {
+		it('Should paginate with cursor correctly', async () => {
 			const POSTS_COUNT = 15;
 			const LIMIT = 5;
 
@@ -255,7 +255,7 @@ describe('Post repository', () => {
 	});
 
 	describe('updatePost', () => {
-		it('should soft delete post', async () => {
+		it('Should soft delete post', async () => {
 			const created = await insertPost(DEFAULT_POST);
 
 			await updatePost(
@@ -270,13 +270,13 @@ describe('Post repository', () => {
 			expect(post?.deletedAt).toBeInstanceOf(Date);
 		});
 
-		it('should throw when post does not exist', async () => {
+		it('Should throw when post does not exist', async () => {
 			await expect(
 				updatePost({ type: 'id', id: ABSURD_ID }, { deletedAt: new Date() }),
 			).rejects.toThrow(AppError);
 		});
 
-		it('should restore soft deleted post', async () => {
+		it('Should restore soft deleted post', async () => {
 			const created = await insertPost({
 				...DEFAULT_POST,
 				deletedAt: new Date(),
@@ -291,7 +291,7 @@ describe('Post repository', () => {
 			expect(post?.deletedAt).toBeNull();
 		});
 
-		it('should update post status', async () => {
+		it('Should update post status correctly', async () => {
 			const created = await insertPost({
 				...DEFAULT_POST,
 				status: 'draft',
@@ -311,6 +311,22 @@ describe('Post repository', () => {
 		it('should return empty list when no tags', async () => {
 			const tags = await selectTags();
 			expect(tags).toHaveLength(0);
+		});
+
+		it('Should return all tags', async () => {
+			await insertPost({
+				...DEFAULT_POST,
+				title: 'Post with tags',
+				slug: 'post-with-tags',
+				tags: {
+					connectOrCreate: [
+						{ where: { name: 'Tag1' }, create: { name: 'Tag1' } },
+						{ where: { name: 'Tag2' }, create: { name: 'Tag2' } },
+					],
+				},
+			});
+			const tags = await selectTags();
+			expect(tags).toHaveLength(2);
 		});
 	});
 });
