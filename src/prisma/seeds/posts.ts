@@ -2,7 +2,7 @@ import * as t from '../../routes/posts/model/types';
 import { prisma } from '../client';
 
 const posts: t.InsertPost[] = [];
-const POSTS_COUNT = 0;
+const POSTS_COUNT = 50;
 
 for (let i = 0; i < POSTS_COUNT; i++) {
 	posts.push({
