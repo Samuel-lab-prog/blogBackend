@@ -5,8 +5,8 @@ import { rateLimit } from 'elysia-rate-limit';
 import { BunAdapter } from 'elysia/adapter/bun';
 
 import { ErrorPlugin, LoggerPlugin, sanitize } from '@utils';
-import { postsRouter } from 'routes/posts/controllers';
-import { authRouter } from 'routes/auth/controllers';
+import { postsRouter } from '@domains/posts/controllers';
+import { authRouter } from '@domains/auth/controllers';
 
 const PREFIX = '/api/v1';
 const INSTANCE_NAME = 'mainServerInstance';

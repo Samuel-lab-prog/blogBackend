@@ -12,7 +12,7 @@
 			"@root": ["./"],
 			"@utils": ["./utils/"],
 			"@plugins": ["./utils/plugins/"],
-			"@routes/*": ["./routes/*"],
+			"@domains/*": ["./domains/*"],
 			"@prisma/*": ["./prisma/*"]
 		},
 
