@@ -25,6 +25,7 @@
 		"typescript": "^5"
 	},
 	"scripts": {
+		"build": "bun build src/server.ts --target bun --outdir dist",
 		"start": "bun src/server.ts",
 		"docker:up": "docker build -t minha-api . && docker run --env-file .env -p 5000:5000 minha-api",
 		"generate": "npx prisma generate",
