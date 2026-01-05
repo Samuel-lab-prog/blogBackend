@@ -25,8 +25,7 @@
 		"typescript": "^5"
 	},
 	"scripts": {
-		"build": "bun build src/server.ts --compile --minify-whitespace --minify-syntax --outfile dist/server",
-		"start": "./dist/server",
+		"start": "bun run ./src/server.ts",
 		"generate": "npx prisma generate",
 		"migrateprod": "npx prisma migrate deploy",
 		"migratedev": "npx prisma migrate dev",
@@ -42,8 +41,7 @@
 		"barrels": "barrelsby --config barrels.config.json",
 		"check-deps": "npx dependency-cruiser src",
 		"check": "bun lint:fix && bun format:fix && bun test && bun barrels && bun check-deps",
-		"compose": "docker-compose up --build",
-		"compose:prisma": "docker compose exec api bun prisma migrate dev && docker compose exec api bun prisma generate && docker compose exec api bun prisma db seed"
+		"compose": "docker-compose up --build"
 	},
 	"dependencies": {
 		"@elysiajs/cors": "^1.4.1",
