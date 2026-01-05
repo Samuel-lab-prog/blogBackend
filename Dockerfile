@@ -12,4 +12,4 @@ RUN bun run generate
 ENV PORT=5000
 EXPOSE 5000
 
-CMD ["bun", "start"]
+CMD ["bun", "run", "start"]
