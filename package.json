@@ -26,6 +26,7 @@
 	},
 	"scripts": {
 		"start": "bun run ./src/server.ts",
+		"docker:up": "docker build -t minha-api . && docker run -p 5000:5000 minha-api",
 		"generate": "npx prisma generate",
 		"migrateprod": "npx prisma migrate deploy",
 		"migratedev": "npx prisma migrate dev",
